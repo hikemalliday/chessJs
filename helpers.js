@@ -207,9 +207,11 @@ export function generateBoard() {
       space.id = `${y}-${x}`;
 
       if (colorIsWhite) {
-        space.classList.add("board-space-white");
+        space.classList.add("space");
+        space.classList.add("white");
       } else {
-        space.classList.add("board-space-beige");
+        space.classList.add("space");
+        space.classList.add("beige");
       }
 
       row.appendChild(space);
@@ -219,19 +221,17 @@ export function generateBoard() {
   }
 }
 
-// This is likely used everytime a piece moves
+// Render pieces on board according to 'gameState'
 export function generateBoardState(gameState) {
-  // iterate over every piece in the game state grid,
-  // and grab elements on the board and update acoordingly
   for (let y = 0; y < gameState.length; y++) {
     for (let x = 0; x < gameState[0].length; x++) {
       const space = document.getElementById(`${y}-${x}`);
+      // If gamestate[y][x] is null, remove img
       if (!gameState[y][x]) {
         const img = space.querySelector("img");
         if (img) {
           img.remove();
         }
-        console.log("continue block");
         continue;
       }
 
@@ -240,6 +240,7 @@ export function generateBoardState(gameState) {
       img.src = `./pieces/${piece.type}-${piece.color}.svg`;
       img.width = 50;
       img.height = 50;
+      img.dataset.coordinates = `${y}-${x}`;
       space.appendChild(img);
     }
   }
@@ -253,27 +254,3 @@ const validMoveHelpers = {
   king: isMoveValidKing,
   queen: isMoveValidQueen,
 };
-
-function isMoveValidPawn(piece, start, end, gameState) {
-  return true;
-}
-
-function isMoveValidRook(piece, start, end, gameState) {
-  return true;
-}
-
-function isMoveValidKnight(piece, start, end, gameState) {
-  return true;
-}
-
-function isMoveValidBishop(piece, start, end, gameState) {
-  return true;
-}
-
-function isMoveValidKing(piece, start, end, gameState) {
-  return true;
-}
-
-function isMoveValidQueen(piece, start, end, gameState) {
-  return true;
-}

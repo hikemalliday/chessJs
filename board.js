@@ -4,8 +4,71 @@ import {
   getStartingGameState,
 } from "./helpers.js";
 
-console.log("YO WHATS UP");
 generateBoard();
 const gameState = getStartingGameState();
-console.log(gameState);
 generateBoardState(gameState);
+
+let draggedImg = null;
+let draggedPiece = null;
+let y_start = null;
+let x_start = null;
+let y_end = null;
+let x_end = null;
+
+// Add event listeners for all pieces
+document.querySelectorAll("img").forEach((piece) => {
+  piece.addEventListener("dragstart", (e) => {
+    //console.log(gameState);
+    draggedImg = e.target;
+    if (!draggedImg) {
+      console.log("dragstart early return");
+      return;
+    }
+
+    [y_start, x_start] = draggedImg.dataset.coordinates.split("-");
+    draggedPiece = gameState[y_start][x_start];
+    if (!draggedPiece) return;
+    console.log(draggedPiece);
+
+    setTimeout(() => {
+      e.target.style.display = "none"; // Hide the piece while dragging
+    }, 0);
+  });
+
+  piece.addEventListener("dragend", (e) => {
+    setTimeout(() => {
+      e.target.style.display = "flex";
+      draggedImg = null;
+      draggedPiece = null;
+    }, 0);
+  });
+});
+
+document.querySelectorAll(".space").forEach((space) => {
+  space.addEventListener("dragover", (e) => {
+    e.preventDefault(); // Allow drop
+  });
+
+  space.addEventListener("drop", (e) => {
+    e.preventDefault();
+    // console.log(
+    //   `draggedImg: ${draggedImg}, draggedPiece: ${JSON.stringify(draggedPiece)}`
+    // );
+    if (!draggedImg || !draggedPiece) {
+      console.log("drop early return");
+      return;
+    }
+    [y_end, x_end] = space.id.split("-");
+    if (
+      !draggedPiece.isMoveValid([y_start, x_start], [y_end, x_end], gameState)
+    )
+      return;
+    gameState[y_end][x_end] = draggedPiece; // Set end to draggedPiece, we might need to just make a copy tbh
+    delete gameState[y_start][x_start];
+    space.appendChild(draggedImg); // Move the piece to the new space
+    draggedImg.dataset.coordinates = `${y_end}-${x_end}`;
+    //console.log(gameState);
+  });
+});
+
+//console.log(gameState);

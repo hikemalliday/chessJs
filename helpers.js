@@ -246,11 +246,11 @@ export function generateBoardState(gameState) {
   }
 }
 
-const validMoveHelpers = {
-  pawn: isMoveValidPawn,
-  rook: isMoveValidRook,
-  knight: isMoveValidKnight,
-  bishop: isMoveValidBishop,
-  king: isMoveValidKing,
-  queen: isMoveValidQueen,
-};
+// const validMoveHelpers = {
+//   pawn: isMoveValidPawn,
+//   rook: isMoveValidRook,
+//   knight: isMoveValidKnight,
+//   bishop: isMoveValidBishop,
+//   king: isMoveValidKing,
+//   queen: isMoveValidQueen,
+// };

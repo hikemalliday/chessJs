@@ -1,5 +1,6 @@
 export class Piece {
-  constructor(type, color) {
+  constructor(type, color, board) {
+    this.board = board;
     this.type = type;
     this.color = color;
     this.hasMoved = false;
@@ -13,7 +14,16 @@ export class Piece {
     };
   }
 
-  isMoveValid(start, end, gameState = {}, activePlayer = {}) {
+  isMoveValid(
+    start,
+    end,
+    gameState = {},
+    activePlayer = {},
+    king_check = false
+  ) {
+    // console.log("isMoveValid");
+    // console.log(`activePlayer[color]: ${activePlayer["color"]}`);
+    // console.log(`this.color: ${this.color}`);
     if (activePlayer["color"] !== this.color) return false;
     const coords = {
       y_start: start[0],
@@ -31,10 +41,10 @@ export class Piece {
       coords["x_end"] > 7
     )
       return false;
-    return this.MOVE_LOOKUP[this.type](coords, gameState);
+    return this.MOVE_LOOKUP[this.type](coords, gameState, king_check);
   }
 
-  #isMoveValidPawn(coords, gameState) {
+  #isMoveValidPawn(coords, gameState, king_check = false) {
     console.log("isMoveValidPawn start");
     const { y_start, x_start, y_end, x_end, y_abs, x_abs } = coords;
     const landingSpace = gameState[y_end][x_end];
@@ -60,7 +70,10 @@ export class Piece {
         return false;
 
       // Kill piece logic
-      this.#killPiece(y_end, x_end, gameState);
+      if (!king_check) {
+        console.log("isMoveValidPawn kill, this.color == black");
+        //this.#killPiece(y_end, x_end, gameState);
+      }
       return true;
     } else if (this.color == "white") {
       if (y_start == 6 && y_abs == 2 && x_abs == 0 && !landingSpace)
@@ -82,28 +95,36 @@ export class Piece {
       )
         return false;
       // Kill piece
-      this.#killPiece(y_end, x_end, gameState);
+      if (!king_check) {
+        console.log("isMoveValidPawn kill, this.color == white");
+        //this.#killPiece(y_end, x_end, gameState);
+      }
       return true;
     }
   }
 
-  #isMoveValidRook(coords, gameState) {
+  #isMoveValidRook(coords, gameState, king_check = false) {
     console.log("isMoveValidRookWhite");
     const { y_start, x_start, y_end, x_end, y_abs, x_abs } = coords;
     const landingSpace = gameState[y_end][x_end];
     // Handle invalid non-straight line moves
     if (y_abs != 0 && x_abs != 0) return false;
     if (x_abs == 0 && y_end > y_start)
-      return this.#isMoveValidRookHelper("DOWN", coords, gameState);
+      return this.#isMoveValidRookHelper("DOWN", coords, gameState, king_check);
     if (x_abs == 0 && y_end < y_start)
-      return this.#isMoveValidRookHelper("UP", coords, gameState);
+      return this.#isMoveValidRookHelper("UP", coords, gameState, king_check);
     if (y_abs == 0 && x_end > x_start)
-      return this.#isMoveValidRookHelper("RIGHT", coords, gameState);
+      return this.#isMoveValidRookHelper(
+        "RIGHT",
+        coords,
+        gameState,
+        king_check
+      );
     if (y_abs == 0 && x_end < x_start)
-      return this.#isMoveValidRookHelper("LEFT", coords, gameState);
+      return this.#isMoveValidRookHelper("LEFT", coords, gameState, king_check);
   }
 
-  #isMoveValidKnight(coords, gameState) {
+  #isMoveValidKnight(coords, gameState, king_check = false) {
     const { y_start, x_start, y_end, x_end, y_abs, x_abs } = coords;
     const landingSpace = gameState[y_end][x_end];
     // Handle non-L movements
@@ -115,40 +136,85 @@ export class Piece {
     // Handle attempt to land on own color
     if (landingSpace.color == this.color) return false;
     // kill piece
-    this.#killPiece(y_end, x_end, gameState);
+    if (!king_check) {
+      console.log("isMoveValidKnight, kill piece");
+      //this.#killPiece(y_end, x_end, gameState);
+    }
     return true;
   }
 
-  #isMoveValidBishop(coords, gameState) {
+  #isMoveValidBishop(coords, gameState, king_check = false) {
     console.log("isMoveValidBishopBlack");
     const { y_start, x_start, y_end, x_end, y_abs, x_abs } = coords;
     if (x_abs != y_abs) return false;
     if (y_end < y_start && x_end < x_start)
-      return this.#isMoveValidBishopHelper("UP_LEFT", coords, gameState);
+      return this.#isMoveValidBishopHelper(
+        "UP_LEFT",
+        coords,
+        gameState,
+        king_check
+      );
     if (y_end < y_start && x_end > x_start)
-      return this.#isMoveValidBishopHelper("UP_RIGHT", coords, gameState);
+      return this.#isMoveValidBishopHelper(
+        "UP_RIGHT",
+        coords,
+        gameState,
+        king_check
+      );
     if (y_end > y_start && x_end < x_start)
-      return this.#isMoveValidBishopHelper("DOWN_LEFT", coords, gameState);
+      return this.#isMoveValidBishopHelper(
+        "DOWN_LEFT",
+        coords,
+        gameState,
+        king_check
+      );
     if (y_end > y_start && x_end > x_start)
-      return this.#isMoveValidBishopHelper("DOWN_RIGHT", coords, gameState);
+      return this.#isMoveValidBishopHelper(
+        "DOWN_RIGHT",
+        coords,
+        gameState,
+        king_check
+      );
   }
 
-  #isMoveValidKing(coords, gameState) {
-    console.log("isMoveValidKing");
+  #isMoveValidKing(coords, gameState, king_check = false) {
+    // console.log("isMoveValidKing.this:");
+    // console.log(this);
+    //console.log(`king_check: ${king_check}`);
+    // console.log("isMoveValidKing");
+    //console.log(`coords: ${JSON.stringify(coords)}`);
     const { y_start, x_start, y_end, x_end, y_abs, x_abs } = coords;
+    // console.log("isMoveValidKing.coords:");
+    // console.log(coords);
+    // console.log("gameState:");
+    // console.log(gameState);
     const landingSpace = gameState[y_end][x_end];
-    if (y_abs > 1 || x_abs > 1) return false;
-    if (landingSpace && landingSpace.color == this.color) return false;
+    // console.log("isMoveValidKing landingSpace:");
+    // console.log(landingSpace);
+    // console.log(`isMoveValid.landingSpace.color: ${landingSpace?.color}`);
+    // console.log(`isMoveValid.this.color: ${this.color}`);
+    if (y_abs > 1 || x_abs > 1) {
+      console.log("king tries to move too far");
+      return false;
+    }
+    if (landingSpace && landingSpace.color == this.color) {
+      console.log("king tries to move to same color");
+      return false;
+    }
     if (!landingSpace) {
+      console.log("king moves to empty space");
       this.hasMoved = true;
       return true;
     }
-    this.#killPiece(y_end, x_end, gameState);
+    if (!king_check) {
+      console.log("isMoveValidKing, kill piece");
+      //this.#killPiece(y_end, x_end, gameState);
+    }
     this.hasMoved = true;
     return true;
   }
 
-  #isMoveValidQueen(coords, gameState) {
+  #isMoveValidQueen(coords, gameState, king_check = false) {
     console.log("isMoveValidQueen");
     const { y_start, x_start, y_end, x_end, y_abs, x_abs } = coords;
     let movementType = null;
@@ -179,7 +245,7 @@ export class Piece {
     }
   }
 
-  #isMoveValidBishopHelper(direction, coords, gameState) {
+  #isMoveValidBishopHelper(direction, coords, gameState, king_check = false) {
     const { y_start, x_start, y_end, x_end, y_abs, x_abs } = coords;
     const landingSpace = gameState[y_end][x_end];
     let y = Number(y_start);
@@ -208,7 +274,10 @@ export class Piece {
 
       if (nextSpace) {
         if (x == x_end && y == y_end && nextSpace.color !== this.color) {
-          this.#killPiece(y_end, x_end, gameState);
+          if (!king_check) {
+            console.log("isMoveValidBishopHelper kill");
+            //this.#killPiece(y_end, x_end, gameState);
+          }
           return true;
         }
         return false;
@@ -221,7 +290,7 @@ export class Piece {
     if (landingSpace && landingSpace.color !== this.color) return true;
   }
 
-  #isMoveValidRookHelper(direction, coords, gameState) {
+  #isMoveValidRookHelper(direction, coords, gameState, king_check = false) {
     const { y_start, x_start, y_end, x_end, y_abs, x_abs } = coords;
     const landingSpace = gameState[y_end][x_end];
     let y = Number(y_start);
@@ -244,7 +313,10 @@ export class Piece {
       let nextSpace = gameState[y][x];
       if (nextSpace) {
         if (x == x_end && y == y_end && nextSpace.color !== this.color) {
-          this.#killPiece(y_end, x_end, gameState);
+          if (!king_check) {
+            console.log("isMoveValidRookHelper kill");
+            // this.#killPiece(y_end, x_end, gameState);
+          }
           this.hasMoved = true;
           return true;
         }
@@ -260,13 +332,5 @@ export class Piece {
       this.hasMoved = true;
       return true;
     }
-  }
-
-  #killPiece(y_end, x_end, gameState) {
-    const img = document
-      .getElementById(`${y_end}-${x_end}`)
-      .querySelector("img");
-    if (img) img.remove();
-    delete gameState[y_end][x_end];
   }
 }

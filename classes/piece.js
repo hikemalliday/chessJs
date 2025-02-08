@@ -2,6 +2,7 @@ export class Piece {
   constructor(type, color) {
     this.type = type;
     this.color = color;
+    this.hasMoved = false;
     this.MOVE_LOOKUP = {
       pawn: this.#isMoveValidPawn.bind(this),
       rook: this.#isMoveValidRook.bind(this),
@@ -12,7 +13,8 @@ export class Piece {
     };
   }
 
-  isMoveValid(start, end, gameState = {}) {
+  isMoveValid(start, end, gameState = {}, activePlayer = {}) {
+    if (activePlayer["color"] !== this.color) return false;
     const coords = {
       y_start: start[0],
       x_start: start[1],
@@ -21,16 +23,15 @@ export class Piece {
       y_abs: Math.abs(start[0] - end[0]),
       x_abs: Math.abs(start[1] - end[1]),
     };
-    // TODO: I dont think we need start checks here
     if (
+      // TODO: I dont think we need start checks here
       // coords["y_start"] > 7 ||
       // coords["y_end"] < 0 ||
       coords["x_start"] < 0 ||
       coords["x_end"] > 7
     )
       return false;
-    const bool = this.MOVE_LOOKUP[this.type](coords, gameState);
-    return bool;
+    return this.MOVE_LOOKUP[this.type](coords, gameState);
   }
 
   #isMoveValidPawn(coords, gameState) {
@@ -138,8 +139,12 @@ export class Piece {
     const landingSpace = gameState[y_end][x_end];
     if (y_abs > 1 || x_abs > 1) return false;
     if (landingSpace && landingSpace.color == this.color) return false;
-    if (!landingSpace) return true;
+    if (!landingSpace) {
+      this.hasMoved = true;
+      return true;
+    }
     this.#killPiece(y_end, x_end, gameState);
+    this.hasMoved = true;
     return true;
   }
 
@@ -240,14 +245,21 @@ export class Piece {
       if (nextSpace) {
         if (x == x_end && y == y_end && nextSpace.color !== this.color) {
           this.#killPiece(y_end, x_end, gameState);
+          this.hasMoved = true;
           return true;
         }
         return false;
       }
     }
-    if (!landingSpace) return true;
+    if (!landingSpace) {
+      this.hasMoved = true;
+      return true;
+    }
     if (landingSpace && landingSpace.color === this.color) return false;
-    if (landingSpace && landingSpace.color !== this.color) return true;
+    if (landingSpace && landingSpace.color !== this.color) {
+      this.hasMoved = true;
+      return true;
+    }
   }
 
   #killPiece(y_end, x_end, gameState) {

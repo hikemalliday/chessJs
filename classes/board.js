@@ -13,6 +13,60 @@ export class Board {
   #findPiece([y_start, x_start], direction) {
     let y = y_start;
     let x = x_start;
+    // Find Knight
+    const knightMoves = new Set([
+      "UP_TWO_LEFT_ONE",
+      "UP_ONE_LEFT_TWO",
+      "UP_TWO_RIGHT_ONE",
+      "UP_ONE_RIGHT_TWO",
+      "DOWN_TWO_RIGHT_ONE",
+      "DOWN_ONE_RIGHT_TWO",
+      "DOWN_TWO_LEFT_ONE",
+      "DOWN_ONE_LEFT_TWO",
+    ]);
+
+    if (knightMoves.has(direction)) {
+      console.log("knight direction found");
+      switch (direction) {
+        case "UP_TWO_LEFT_ONE":
+          y = y - 2;
+          x = x - 1;
+          break;
+        case "UP_ONE_LEFT_TWO":
+          y = y - 1;
+          x = x - 2;
+          break;
+        case "UP_TWO_RIGHT_ONE":
+          y = y - 2;
+          x = x + 1;
+          break;
+        case "UP_ONE_RIGHT_TWO":
+          y = y - 1;
+          x = x + 2;
+          break;
+        case "DOWN_TWO_RIGHT_ONE":
+          y = y + 2;
+          x = x + 1;
+          break;
+        case "DOWN_ONE_RIGHT_TWO":
+          y = y + 1;
+          x = x + 2;
+          break;
+        case "DOWN_ONE_LEFT_TWO":
+          y = y + 1;
+          x = x - 2;
+          break;
+        case "DOWN_TWO_LEFT_ONE":
+          y = y + 2;
+          x = x - 1;
+          break;
+      }
+      if (y < 0 || y > 7 || x < 0 || x > 7) return null;
+      const piece = this.gameState[y][x];
+      if (piece) return { piece: piece, y_piece: y, x_piece: x };
+      return null;
+    }
+
     while (true) {
       // Move first
       switch (direction) {
@@ -45,7 +99,6 @@ export class Board {
           x += 1;
           break;
       }
-
       // Check bounds before accessing the game state
       if (y < 0 || y > 7 || x < 0 || x > 7) break;
 
@@ -82,30 +135,32 @@ export class Board {
       }
     }
 
+    const directions = [
+      "UP",
+      "DOWN",
+      "LEFT",
+      "RIGHT",
+      "UP_RIGHT",
+      "UP_LEFT",
+      "DOWN_RIGHT",
+      "DOWN_LEFT",
+      "UP_TWO_LEFT_ONE",
+      "UP_ONE_LEFT_TWO",
+      "UP_TWO_RIGHT_ONE",
+      "UP_ONE_RIGHT_TWO",
+      "DOWN_TWO_RIGHT_ONE",
+      "DOWN_ONE_RIGHT_TWO",
+      "DOWN_TWO_LEFT_ONE",
+      "DOWN_ONE_LEFT_TWO",
+    ];
+
     const isThreat = [];
 
-    isThreat.push(this.#checkDirection(y_king, x_king, "UP", king, enemyColor));
-    isThreat.push(
-      this.#checkDirection(y_king, x_king, "DOWN", king, enemyColor)
-    );
-    isThreat.push(
-      this.#checkDirection(y_king, x_king, "LEFT", king, enemyColor)
-    );
-    isThreat.push(
-      this.#checkDirection(y_king, x_king, "RIGHT", king, enemyColor)
-    );
-    isThreat.push(
-      this.#checkDirection(y_king, x_king, "UP_RIGHT", king, enemyColor)
-    );
-    isThreat.push(
-      this.#checkDirection(y_king, x_king, "UP_LEFT", king, enemyColor)
-    );
-    isThreat.push(
-      this.#checkDirection(y_king, x_king, "DOWN_RIGHT", king, enemyColor)
-    );
-    isThreat.push(
-      this.#checkDirection(y_king, x_king, "DOWN_LEFT", king, enemyColor)
-    );
+    for (const direction of directions) {
+      isThreat.push(
+        this.#checkDirection(y_king, x_king, direction, king, enemyColor)
+      );
+    }
 
     for (const bool of isThreat) {
       if (bool) return true;
@@ -150,7 +205,6 @@ export class Board {
     };
     return pieceLookup[`${y}-${x}`];
   }
-
   // Starting board state. Only called once on app start
   #setStartingGameState() {
     const gameState = [];
@@ -163,7 +217,6 @@ export class Board {
     }
     return gameState;
   }
-
   // Selects the "board-container" div, then appends the rows and spaces to it.
   #generateBoard() {
     const boardContainer = document.getElementById("board-container");
@@ -195,7 +248,6 @@ export class Board {
       boardContainer.appendChild(row);
     }
   }
-
   // Render pieces on board according to 'gameState'
   #generateBoardState() {
     for (let y = 0; y < this.gameState.length; y++) {
@@ -220,7 +272,7 @@ export class Board {
       }
     }
   }
-
+  // Possibly refactor this, bad code smell
   #addEventListeners() {
     let draggedImg = null;
     let draggedPiece = null;
@@ -233,15 +285,11 @@ export class Board {
     document.querySelectorAll("img").forEach((piece) => {
       piece.addEventListener("dragstart", (e) => {
         draggedImg = e.target;
-        if (!draggedImg) {
-          console.log("dragstart early return");
-          return;
-        }
+        if (!draggedImg) return;
 
         [y_start, x_start] = draggedImg.dataset.coordinates.split("-");
         draggedPiece = this.gameState[y_start][x_start];
-        // console.log("draggedPiece, first event listener:");
-        // console.log(draggedPiece);
+
         if (!draggedPiece) return;
 
         setTimeout(() => {
@@ -268,8 +316,7 @@ export class Board {
         if (!draggedImg || !draggedPiece) return;
 
         [y_end, x_end] = space.id.split("-");
-        // console.log("draggedPiece, drop event listener:");
-        // console.log(draggedPiece);
+
         if (
           !draggedPiece.isMoveValid(
             [y_start, x_start],
@@ -279,21 +326,16 @@ export class Board {
           )
         )
           return;
-        // Handle valid move
+        // Handle valid move, then look for 'check'. If check is found, revert move and early return
         // kill piece
-        const killedPiece = this.#killPiece(y_end, x_end); // Could be refactored to return a deep copy of the class
+        const killedPiece = this.#killPiece(y_end, x_end);
         // Move piece
         this.gameState[y_end][x_end] = draggedPiece;
         // Create deep clone of movedPiece
         const movedPiece = Object.create(Object.getPrototypeOf(draggedPiece));
         Object.assign(movedPiece, draggedPiece);
-        // console.log("movedPiece:");
-        // console.log(movedPiece);
-        // Create deep clone of killedPiece
-        // console.log("killedPiece:");
-        // console.log(killedPiece);
         delete this.gameState[y_start][x_start];
-        // We have moved and killed. We need to see if this puts us in check. If so, revert mutation
+
         let inCheck = this.#isInCheck();
         if (inCheck) {
           this.#revertMove(
@@ -304,8 +346,7 @@ export class Board {
             movedPiece,
             killedPiece
           );
-          // console.log("draggedPiece after move is reverted:");
-          // console.log(draggedPiece);
+          // Early return if move puts us in check
           return;
         }
         // Remove the killed piece image

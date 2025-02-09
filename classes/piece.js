@@ -92,6 +92,7 @@ export class Piece {
   }
 
   #isMoveValidKnight(coords, gameState) {
+    console.log("isMoveValidKnight");
     const { y_start, x_start, y_end, x_end, y_abs, x_abs } = coords;
     const landingSpace = gameState[y_end][x_end];
     // Handle non-L movements

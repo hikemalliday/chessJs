@@ -24,7 +24,17 @@ export class Piece {
       y_abs: Math.abs(start[0] - end[0]),
       x_abs: Math.abs(start[1] - end[1]),
     };
-    if (coords["x_start"] < 0 || coords["x_end"] > 7) return false;
+    if (
+      coords["x_start"] < 0 ||
+      coords["x_end"] < 0 ||
+      coords["y_start"] < 0 ||
+      coords["y_end"] < 0 ||
+      coords["x_start"] > 7 ||
+      coords["x_end"] > 7 ||
+      coords["y_start"] > 7 ||
+      coords["y_end"] > 7
+    )
+      return false;
     return this.MOVE_LOOKUP[this.type](coords, gameState);
   }
 

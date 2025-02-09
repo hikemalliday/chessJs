@@ -57,28 +57,16 @@ export class Board {
   }
 
   #isInCheck() {
-    //console.log(`$isInCheck.king: ${JSON.stringify(king)}`);
-    // const possibleThreats = {
-    //   up: new Set(["queen", "rook", "king"]),
-    //   down: new Set(["queen", "rook", "king"]),
-    //   left: new Set(["queen", "rook", "king"]),
-    //   right: new Set(["queen", "rook", "king"]),
-    //   upRight: new Set(["queen", "bishop", "king", "pawn"]),
-    //   upLeft: new Set(["queen", "bishop", "king", "pawn"]),
-    //   downRight: new Set(["queen", "bishop", "king", "pawn"]),
-    //   downLeft: new Set(["queen", "bishop", "king", "pawn"]),
-    // };
-
+    // Need opposite color to find 'check' via 'isMoveValid'
     const enemyColor =
       this.activePlayer["color"] == "white"
         ? { color: "black" }
         : { color: "white" };
-    // Must be set to enemies color, for 'isMoveValid'
     let king = null;
     let y_king = null;
     let x_king = null;
 
-    // Boomer loop over 'gameState' and find King
+    // Find King
     for (let i = 0; i < this.gameState.length; i++) {
       for (let j = 0; j < this.gameState[0].length; j++) {
         const piece = this.gameState[i][j];
@@ -95,341 +83,72 @@ export class Board {
     }
 
     const isThreat = [];
-    const up = this.#findPiece([y_king, x_king], "UP");
-    const down = this.#findPiece([y_king, x_king], "DOWN");
-    const left = this.#findPiece([y_king, x_king], "LEFT");
-    const right = this.#findPiece([y_king, x_king], "RIGHT");
-    const upRight = this.#findPiece([y_king, x_king], "UP_RIGHT");
-    const upLeft = this.#findPiece([y_king, x_king], "UP_LEFT");
-    const downRight = this.#findPiece([y_king, x_king], "DOWN_RIGHT");
-    const downLeft = this.#findPiece([y_king, x_king], "DOWN_LEFT");
 
-    // Check if moves are valid from the perspective of the enemy piece
-    if (up) {
-      const { piece, y_piece, x_piece } = up;
-      if (piece.color != king.color) {
-        isThreat.push(
-          piece.isMoveValid(
-            [y_piece, x_piece],
-            [y_king, x_king],
-            this.gameState,
-            enemyColor,
-            true
-          )
-        );
-      }
-    }
+    isThreat.push(this.#checkDirection(y_king, x_king, "UP", king, enemyColor));
+    isThreat.push(
+      this.#checkDirection(y_king, x_king, "DOWN", king, enemyColor)
+    );
+    isThreat.push(
+      this.#checkDirection(y_king, x_king, "LEFT", king, enemyColor)
+    );
+    isThreat.push(
+      this.#checkDirection(y_king, x_king, "RIGHT", king, enemyColor)
+    );
+    isThreat.push(
+      this.#checkDirection(y_king, x_king, "UP_RIGHT", king, enemyColor)
+    );
+    isThreat.push(
+      this.#checkDirection(y_king, x_king, "UP_LEFT", king, enemyColor)
+    );
+    isThreat.push(
+      this.#checkDirection(y_king, x_king, "DOWN_RIGHT", king, enemyColor)
+    );
+    isThreat.push(
+      this.#checkDirection(y_king, x_king, "DOWN_LEFT", king, enemyColor)
+    );
 
-    if (down) {
-      const { piece, y_piece, x_piece } = down;
-      if (piece.color != king.color) {
-        isThreat.push(
-          piece.isMoveValid(
-            [y_piece, x_piece],
-            [y_king, x_king],
-            this.gameState,
-            enemyColor,
-            true
-          )
-        );
-      }
-    }
-
-    if (left) {
-      const { piece, y_piece, x_piece } = left;
-      if (piece.color != king.color) {
-        isThreat.push(
-          piece.isMoveValid(
-            [y_piece, x_piece],
-            [y_king, x_king],
-            this.gameState,
-            enemyColor,
-            true
-          )
-        );
-      }
-    }
-
-    if (right) {
-      const { piece, y_piece, x_piece } = right;
-      if (piece.color != king.color) {
-        isThreat.push(
-          piece.isMoveValid(
-            [y_piece, x_piece],
-            [y_king, x_king],
-            this.gameState,
-            enemyColor,
-            true
-          )
-        );
-      }
-    }
-
-    if (upRight) {
-      const { piece, y_piece, x_piece } = upRight;
-      if (piece.color != king.color) {
-        isThreat.push(
-          piece.isMoveValid(
-            [y_piece, x_piece],
-            [y_king, x_king],
-            this.gameState,
-            enemyColor,
-            true
-          )
-        );
-      }
-    }
-
-    if (upLeft) {
-      const { piece, y_piece, x_piece } = upLeft;
-      if (piece.color != king.color) {
-        isThreat.push(
-          piece.isMoveValid(
-            [y_piece, x_piece],
-            [y_king, x_king],
-            this.gameState,
-            enemyColor,
-            true
-          )
-        );
-      }
-    }
-
-    if (downRight) {
-      const { piece, y_piece, x_piece } = downRight;
-      if (piece.color != king.color) {
-        isThreat.push(
-          piece.isMoveValid(
-            [y_piece, x_piece],
-            [y_king, x_king],
-            this.gameState,
-            enemyColor,
-            true
-          )
-        );
-      }
-    }
-
-    if (downLeft) {
-      const { piece, y_piece, x_piece } = downLeft;
-      if (piece.color != king.color) {
-        isThreat.push(
-          piece.isMoveValid(
-            [y_piece, x_piece],
-            [y_king, x_king],
-            this.gameState,
-            enemyColor,
-            true
-          )
-        );
-      }
-    }
-
-    console.log(`isThread array: ${JSON.stringify(isThreat)}`);
-    // #^ If anything in here is true, we need to return true
     for (const bool of isThreat) {
       if (bool) return true;
     }
     return false;
   }
-  // Theres gotta be a way to refactor this
+
   #getPiece(y, x) {
-    const piece = new Piece();
-    // Black
-    if (y == 0 && x == 0) {
-      piece.color = "black";
-      piece.type = "rook";
-      piece.board = this;
-      return piece;
-    }
-    if (y == 0 && x == 1) {
-      piece.color = "black";
-      piece.type = "knight";
-      piece.board = this;
-      return piece;
-    }
-    if (y == 0 && x == 2) {
-      piece.color = "black";
-      piece.type = "bishop";
-      piece.board = this;
-      return piece;
-    }
-    if (y == 0 && x == 3) {
-      piece.color = "black";
-      piece.type = "queen";
-      piece.board = this;
-      return piece;
-    }
-    if (y == 0 && x == 4) {
-      piece.color = "black";
-      piece.type = "king";
-      piece.board = this;
-      return piece;
-    }
-    if (y == 0 && x == 5) {
-      piece.color = "black";
-      piece.type = "bishop";
-      piece.board = this;
-      return piece;
-    }
-    if (y == 0 && x == 6) {
-      piece.color = "black";
-      piece.type = "knight";
-      piece.board = this;
-      return piece;
-    }
-    if (y == 0 && x == 7) {
-      piece.color = "black";
-      piece.type = "rook";
-      piece.board = this;
-      return piece;
-    }
-    if (y == 1 && x == 0) {
-      piece.color = "black";
-      piece.type = "pawn";
-      piece.board = this;
-      return piece;
-    }
-    if (y == 1 && x == 1) {
-      piece.color = "black";
-      piece.type = "pawn";
-      piece.board = this;
-      return piece;
-    }
-    if (y == 1 && x == 2) {
-      piece.color = "black";
-      piece.type = "pawn";
-      piece.board = this;
-      return piece;
-    }
-    if (y == 1 && x == 3) {
-      piece.color = "black";
-      piece.type = "pawn";
-      piece.board = this;
-      return piece;
-    }
-    if (y == 1 && x == 4) {
-      piece.color = "black";
-      piece.type = "pawn";
-      piece.board = this;
-      return piece;
-    }
-    if (y == 1 && x == 5) {
-      piece.color = "black";
-      piece.type = "pawn";
-      piece.board = this;
-      return piece;
-    }
-    if (y == 1 && x == 6) {
-      piece.color = "black";
-      piece.type = "pawn";
-      piece.board = this;
-      return piece;
-    }
-    if (y == 1 && x == 7) {
-      piece.color = "black";
-      piece.type = "pawn";
-      piece.board = this;
-      return piece;
-    }
-    // White
-    if (y == 6 && x == 0) {
-      piece.color = "white";
-      piece.type = "pawn";
-      piece.board = this;
-      return piece;
-    }
-    if (y == 6 && x == 1) {
-      piece.color = "white";
-      piece.type = "pawn";
-      piece.board = this;
-      return piece;
-    }
-    if (y == 6 && x == 2) {
-      piece.color = "white";
-      piece.type = "pawn";
-      piece.board = this;
-      return piece;
-    }
-    if (y == 6 && x == 3) {
-      piece.color = "white";
-      piece.type = "pawn";
-      piece.board = this;
-      return piece;
-    }
-    if (y == 6 && x == 4) {
-      piece.color = "white";
-      piece.type = "pawn";
-      piece.board = this;
-      return piece;
-    }
-    if (y == 6 && x == 5) {
-      piece.color = "white";
-      piece.type = "pawn";
-      piece.board = this;
-      return piece;
-    }
-    if (y == 6 && x == 6) {
-      piece.color = "white";
-      piece.type = "pawn";
-      piece.board = this;
-      return piece;
-    }
-    if (y == 6 && x == 7) {
-      piece.color = "white";
-      piece.type = "pawn";
-      piece.board = this;
-      return piece;
-    }
-    if (y == 7 && x == 0) {
-      piece.color = "white";
-      piece.type = "rook";
-      piece.board = this;
-      return piece;
-    }
-    if (y == 7 && x == 1) {
-      piece.color = "white";
-      piece.type = "knight";
-      piece.board = this;
-      return piece;
-    }
-    if (y == 7 && x == 2) {
-      piece.color = "white";
-      piece.type = "bishop";
-      piece.board = this;
-      return piece;
-    }
-    if (y == 7 && x == 3) {
-      piece.color = "white";
-      piece.type = "queen";
-      piece.board = this;
-      return piece;
-    }
-    if (y == 7 && x == 4) {
-      piece.color = "white";
-      piece.type = "king";
-      piece.board = this;
-      return piece;
-    }
-    if (y == 7 && x == 5) {
-      piece.color = "white";
-      piece.type = "bishop";
-      piece.board = this;
-      return piece;
-    }
-    if (y == 7 && x == 6) {
-      piece.color = "white";
-      piece.type = "knight";
-      piece.board = this;
-      return piece;
-    }
-    if (y == 7 && x == 7) {
-      piece.color = "white";
-      piece.type = "rook";
-      piece.board = this;
-      return piece;
-    }
-    return null;
+    const pieceLookup = {
+      "0-0": new Piece("rook", "black", this),
+      "0-1": new Piece("knight", "black", this),
+      "0-2": new Piece("bishop", "black", this),
+      "0-3": new Piece("queen", "black", this),
+      "0-4": new Piece("king", "black", this),
+      "0-5": new Piece("bishop", "black", this),
+      "0-6": new Piece("knight", "black", this),
+      "0-7": new Piece("rook", "black", this),
+      "1-0": new Piece("pawn", "black", this),
+      "1-1": new Piece("pawn", "black", this),
+      "1-2": new Piece("pawn", "black", this),
+      "1-3": new Piece("pawn", "black", this),
+      "1-4": new Piece("pawn", "black", this),
+      "1-5": new Piece("pawn", "black", this),
+      "1-6": new Piece("pawn", "black", this),
+      "1-7": new Piece("pawn", "black", this),
+      "6-0": new Piece("pawn", "white", this),
+      "6-1": new Piece("pawn", "white", this),
+      "6-2": new Piece("pawn", "white", this),
+      "6-3": new Piece("pawn", "white", this),
+      "6-4": new Piece("pawn", "white", this),
+      "6-5": new Piece("pawn", "white", this),
+      "6-6": new Piece("pawn", "white", this),
+      "6-7": new Piece("pawn", "white", this),
+      "7-0": new Piece("rook", "white", this),
+      "7-1": new Piece("knight", "white", this),
+      "7-2": new Piece("bishop", "white", this),
+      "7-3": new Piece("queen", "white", this),
+      "7-4": new Piece("king", "white", this),
+      "7-5": new Piece("bishop", "white", this),
+      "7-6": new Piece("knight", "white", this),
+      "7-7": new Piece("rook", "white", this),
+    };
+    return pieceLookup[`${y}-${x}`];
   }
 
   // Starting board state. Only called once on app start
@@ -446,7 +165,6 @@ export class Board {
   }
 
   // Selects the "board-container" div, then appends the rows and spaces to it.
-  // Spaces are styled via CSS
   #generateBoard() {
     const boardContainer = document.getElementById("board-container");
 
@@ -616,6 +334,7 @@ export class Board {
       });
     });
   }
+
   #killPiece(y_end, x_end) {
     const pieceTokill = this.gameState[y_end][x_end];
     if (pieceTokill) {
@@ -624,9 +343,26 @@ export class Board {
     delete this.gameState[y_end][x_end];
     return pieceTokill;
   }
+
   #revertMove(y_start, x_start, y_end, x_end, movedPiece, killedPiece) {
     this.gameState[y_start][x_start] = movedPiece;
     delete this.gameState[y_end][x_end];
     this.gameState[y_end][x_end] = killedPiece;
+  }
+
+  #checkDirection(king_y, king_x, direction, king, enemyColor) {
+    const foundPiece = this.#findPiece([king_y, king_x], direction);
+    if (foundPiece) {
+      const { piece, y_piece, x_piece } = foundPiece;
+      if (piece.color !== king.color) {
+        return piece.isMoveValid(
+          [y_piece, x_piece],
+          [king_y, king_x],
+          this.gameState,
+          enemyColor
+        );
+      }
+    }
+    return false;
   }
 }

@@ -13,7 +13,7 @@ export class Board {
     this.#generatePieceImages();
     this.#addEventListeners();
   }
-  // Array is useless here
+
   #findPiece(y_start, x_start, direction) {
     let y = y_start;
     let x = x_start;
@@ -458,8 +458,6 @@ export class Board {
 
   #getKing() {
     let king = null;
-    let y_king = null;
-    let x_king = null;
 
     for (let i = 0; i < this.gameState.length; i++) {
       for (let j = 0; j < this.gameState[0].length; j++) {
@@ -469,17 +467,13 @@ export class Board {
           piece.type == "king"
         ) {
           king = piece;
-          y_king = i;
-          x_king = j;
           break;
         }
       }
     }
     return king;
   }
-  // Move this to Piece?
-
-  // Move this to King?
+  // Could pass king to this as well if we wanted to decouple
   #canBlockOrKillThreat(threats) {
     const king = this.#getKing();
     const spacesSet = new Set();
@@ -497,14 +491,27 @@ export class Board {
 
     const validMoves = [];
     for (const space of spacesSet) {
+      let y = space[0];
+      let x = space[1];
       for (const piece of pieces) {
         const isValid = piece.isMoveValid(
-          space[0],
-          space[1],
+          y,
+          x,
           this.gameState,
           this.activePlayer
         );
-        if (isValid) validMoves.push(isValid);
+        if (isValid) {
+          const { killedPiece, movedPiece } = piece.executeMove(
+            { y_end: y, x_end: x },
+            this.gameState
+          );
+          if (this.#getThreats() > 0) {
+            validMoves.push(false);
+            continue;
+          }
+          piece.revertMove(y, x, movedPiece, killedPiece, this.gameState);
+          validMoves.push(isValid);
+        }
       }
     }
     for (const bool of validMoves) {
@@ -563,6 +570,8 @@ export class Board {
     }
   }
   // Move this to King?
+  // To decouple this from Board, you could just pass in the king
+  // But you would also have to find all pieces and pass to this function as well...
   #getThreats() {
     const enemyColor =
       this.activePlayer["color"] == "white"
@@ -633,8 +642,6 @@ export class Board {
     if (!canMoveOutOfCheck) {
       canBlockOrKillThreat = this.#canBlockOrKillThreat(this.#getThreats());
     }
-    // console.log(`canMoveOutOfCheck: ${canMoveOutOfCheck}`);
-    // console.log(`canBlockOrKillThreat: ${canBlockOrKillThreat}`);
     checkDiv.innerText = `${this.activePlayer["color"]} king is in check`;
     if (!canBlockOrKillThreat && !canMoveOutOfCheck) {
       checkDiv.innerText = `Checkmate. ${this.activePlayer["color"]} loses!`;

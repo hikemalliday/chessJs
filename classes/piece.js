@@ -125,7 +125,7 @@ export class Piece {
     }
     return killedPiece;
   }
-
+  // refactor to just pass y, x
   executeMove(coords, gameState) {
     const { y_end, x_end } = coords;
 

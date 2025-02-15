@@ -14,7 +14,7 @@ export class Board {
     this.#addEventListeners();
   }
   // Array is useless here
-  #findPiece([y_start, x_start], direction) {
+  #findPiece(y_start, x_start, direction) {
     let y = y_start;
     let x = x_start;
     // Find Knight
@@ -28,7 +28,7 @@ export class Board {
       "DOWN_TWO_LEFT_ONE",
       "DOWN_ONE_LEFT_TWO",
     ]);
-
+    // Not sure why theses need to be disjointed but whatever
     if (knightMoves.has(direction)) {
       switch (direction) {
         case "UP_TWO_LEFT_ONE":
@@ -66,8 +66,7 @@ export class Board {
       }
       if (y < 0 || y > 7 || x < 0 || x > 7) return null;
       const piece = this.gameState[y][x];
-      if (piece) return { piece: piece, y_piece: y, x_piece: x };
-      return null;
+      return piece;
     }
 
     while (true) {
@@ -106,7 +105,7 @@ export class Board {
       if (y < 0 || y > 7 || x < 0 || x > 7) break;
 
       const piece = this.gameState[y][x];
-      if (piece) return { piece: piece, y_piece: y, x_piece: x };
+      if (piece) return piece;
     }
 
     return null;
@@ -266,32 +265,29 @@ export class Board {
 
         if (
           !draggedPiece.isMoveValid(
-            [y_start, x_start],
-            [y_end, x_end],
+            y_end,
+            x_end,
             this.gameState,
             this.activePlayer
           )
         )
           return;
 
-        const { killedPiece, movedPiece } = this.#executeMove(
+        const { killedPiece, movedPiece } = draggedPiece.executeMove(
           {
-            y_start: y_start,
-            x_start: x_start,
             y_end: y_end,
             x_end: x_end,
           },
-          draggedPiece
+          this.gameState
         );
 
         if (this.#getThreats().length > 0) {
-          this.#revertMove(
+          draggedPiece.revertMove(
             y_start,
             x_start,
-            y_end,
-            x_end,
             movedPiece,
-            killedPiece
+            killedPiece,
+            this.gameState
           );
           return;
         }
@@ -310,164 +306,150 @@ export class Board {
   // Move this to Piece?
 
   // Move this to Piece?
-  #revertMove(y_start, x_start, y_end, x_end, movedPiece, killedPiece) {
-    console.log("revertMove call");
-    console.log(
-      `y_start: ${y_start}, x_start: ${x_start}, y_end: ${y_end}, x_end: ${x_end}, movedPiece: ${movedPiece}, killedPiece: ${killedPiece}`
-    );
-    if (movedPiece) {
-      movedPiece.y = y_start;
-      movedPiece.x = x_start;
-    }
-    this.gameState[y_start][x_start] = movedPiece;
-    delete this.gameState[y_end][x_end];
-    this.gameState[y_end][x_end] = killedPiece;
-    if (killedPiece) {
-      killedPiece.y = y_end;
-      killedPiece.x = x_end;
-    }
-  }
+
   // Move this to King?
   #canMoveOutOfCheck() {
-    const { king, y_king, x_king } = this.#getKing();
+    const king = this.#getKing();
     const possibleMoves = {
       UP: {
         is_valid: king.isMoveValid(
-          [y_king, x_king], // start
-          [y_king - 1, x_king], // end
+          king.y - 1,
+          king.x,
           this.gameState,
           this.activePlayer
         ),
         coords: {
-          y_king: y_king,
-          x_king: x_king,
-          y_end: y_king - 1,
-          x_end: x_king,
+          y_start: king.y,
+          x_start: king.x,
+          y_end: king.y - 1,
+          x_end: king.x,
         },
       },
       DOWN: {
         is_valid: king.isMoveValid(
-          [y_king, x_king],
-          [y_king + 1, x_king],
+          king.y + 1,
+          king.x,
           this.gameState,
           this.activePlayer
         ),
         coords: {
-          y_king: y_king,
-          x_king: x_king,
-          y_end: y_king + 1,
-          x_end: x_king,
+          y_start: king.y,
+          x_start: king.x,
+          y_end: king.y + 1,
+          x_end: king.x,
         },
       },
       LEFT: {
         is_valid: king.isMoveValid(
-          [y_king, x_king],
-          [y_king, x_king - 1],
+          king.y,
+          king.x - 1,
           this.gameState,
           this.activePlayer
         ),
         coords: {
-          y_king: y_king,
-          x_king: x_king,
-          y_end: y_king,
-          x_end: x_king - 1,
+          y_start: king.y,
+          x_start: king.x,
+          y_end: king.y,
+          x_end: king.x - 1,
         },
       },
       RIGHT: {
         is_valid: king.isMoveValid(
-          [y_king, x_king],
-          [y_king, x_king + 1],
+          king.y,
+          king.x + 1,
           this.gameState,
           this.activePlayer
         ),
         coords: {
-          y_king: y_king,
-          x_king: x_king,
-          y_end: y_king,
-          x_end: x_king + 1,
+          y_start: king.y,
+          x_start: king.x,
+          y_end: king.y,
+          x_end: king.x + 1,
         },
       },
       UP_RIGHT: {
         is_valid: king.isMoveValid(
-          [y_king, x_king],
-          [y_king - 1, x_king + 1],
+          king.y - 1,
+          king.x + 1,
           this.gameState,
           this.activePlayer
         ),
         coords: {
-          y_king: y_king,
-          x_king: x_king,
-          y_end: y_king - 1,
-          x_end: x_king + 1,
+          y_start: king.y,
+          x_start: king.x,
+          y_end: king.y - 1,
+          x_end: king.x + 1,
         },
       },
       UP_LEFT: {
         is_valid: king.isMoveValid(
-          [y_king, x_king],
-          [y_king - 1, x_king - 1],
+          king.y - 1,
+          king.x - 1,
           this.gameState,
           this.activePlayer
         ),
         coords: {
-          y_king: y_king,
-          x_king,
-          x_king,
-          y_end: y_king - 1,
-          x_end: x_king - 1,
+          y_start: king.y,
+          x_start: king.x,
+          y_end: king.y - 1,
+          x_end: king.x - 1,
         },
       },
       DOWN_RIGHT: {
         is_valid: king.isMoveValid(
-          [y_king, x_king],
-          [y_king + 1, x_king + 1],
+          king.y + 1,
+          king.x + 1,
           this.gameState,
           this.activePlayer
         ),
         coords: {
-          y_king: y_king,
-          x_king,
-          x_king,
-          y_end: y_king + 1,
-          x_end: x_king + 1,
+          y_start: king.y,
+          x_start: king.x,
+          y_end: king.y + 1,
+          x_end: king.x + 1,
         },
       },
       DOWN_LEFT: {
         is_valid: king.isMoveValid(
-          [y_king, x_king],
-          [y_king + 1, x_king - 1],
+          king.y + 1,
+          king.x - 1,
           this.gameState,
           this.activePlayer
         ),
         coords: {
-          y_king: y_king,
-          x_king: x_king,
-          y_end: y_king + 1,
-          x_end: x_king - 1,
+          y_start: king.y,
+          x_start: king.x,
+          y_end: king.y + 1,
+          x_end: king.x - 1,
         },
       },
     };
     const validMoves = [];
     for (const direction in possibleMoves) {
       // We need to loop over all directions and perform those moves if valid
-      const { y_king, x_king, y_end, x_end } =
+      const { y_start, x_start, y_end, x_end } =
         possibleMoves[direction]["coords"];
       if (!possibleMoves[direction]["is_valid"]) continue;
-      const { killedPiece, movedPiece } = this.#executeMove(
+      const { killedPiece, movedPiece } = king.executeMove(
         {
-          y_start: y_king,
-          x_start: x_king,
           y_end: y_end,
           x_end: x_end,
         },
-        king
+        this.gameState
       );
       const inCheck = this.#getThreats().length > 0;
       if (inCheck) validMoves.push(false);
       else validMoves.push(true);
-      this.#revertMove(y_king, x_king, y_end, x_end, movedPiece, killedPiece);
+
+      king.revertMove(
+        y_start,
+        x_start,
+        movedPiece,
+        killedPiece,
+        this.gameState
+      );
     }
-    console.log("can move out of check validMoves:");
-    console.log(validMoves);
+
     for (const bool of validMoves) {
       if (bool) return true;
     }
@@ -493,20 +475,18 @@ export class Board {
         }
       }
     }
-    return king ? { king: king, y_king: y_king, x_king: x_king } : null;
+    return king;
   }
   // Move this to Piece?
 
   // Move this to King?
   #canBlockOrKillThreat(threats) {
-    const { king, y_king, x_king } = this.#getKing();
+    const king = this.#getKing();
     const spacesSet = new Set();
     for (const threat of threats) {
       this.#getThreatPath(threat, king, spacesSet);
     }
     // We now have the set of spaces we must block.
-    console.log("canBlockOrKillThreat.spacesSet:");
-    console.log(spacesSet);
     const pieces = [];
     for (const row of this.gameState) {
       for (const piece of row) {
@@ -519,8 +499,8 @@ export class Board {
     for (const space of spacesSet) {
       for (const piece of pieces) {
         const isValid = piece.isMoveValid(
-          [piece.y, piece.x],
-          space,
+          space[0],
+          space[1],
           this.gameState,
           this.activePlayer
         );
@@ -588,7 +568,9 @@ export class Board {
       this.activePlayer["color"] == "white"
         ? { color: "black" }
         : { color: "white" };
-    const { king, y_king, x_king } = this.#getKing();
+    const king = this.#getKing();
+    console.log("king:");
+    console.log(king);
     const directions = [
       "UP",
       "DOWN",
@@ -611,25 +593,24 @@ export class Board {
     const threats = [];
 
     for (const direction of directions) {
-      const foundPiece = this.#findPiece([y_king, x_king], direction);
+      const foundPiece = this.#findPiece(king.y, king.x, direction);
       if (foundPiece) {
-        const { piece, y_piece, x_piece } = foundPiece;
+        const piece = foundPiece; // This assignement is useless I think
         if (piece.color !== king.color) {
+          console.log("piece does not equal king color");
           const isValid = piece.isMoveValid(
-            [y_piece, x_piece],
-            [y_king, x_king],
+            king.y,
+            king.x,
             this.gameState,
             enemyColor
           );
+          // console.log(`getThreats.isValid: ${isValid}`);
           if (isValid) threats.push(piece);
         }
       }
     }
-    // console.log("getThreats.threats:");
-    // console.log(threats);
     return threats;
   }
-  // Get all pieces for a player (used for determining checkmate)
 
   #passTurn() {
     const activePlayerDiv = document.getElementById("active-player-div");
@@ -646,10 +627,14 @@ export class Board {
       checkDiv.innerText = "";
       return;
     }
-    const canMoveOutOfCheck = this.#canMoveOutOfCheck();
-    console.log(`canMoveOutOfCheck: ${canMoveOutOfCheck}`);
-    const canBlockOrKillThreat = this.#canBlockOrKillThreat(this.#getThreats());
-    console.log(`canBlockOrKillThreat: ${canBlockOrKillThreat}`);
+    let canMoveOutOfCheck = null;
+    let canBlockOrKillThreat = null;
+    canMoveOutOfCheck = this.#canMoveOutOfCheck();
+    if (!canMoveOutOfCheck) {
+      canBlockOrKillThreat = this.#canBlockOrKillThreat(this.#getThreats());
+    }
+    // console.log(`canMoveOutOfCheck: ${canMoveOutOfCheck}`);
+    // console.log(`canBlockOrKillThreat: ${canBlockOrKillThreat}`);
     checkDiv.innerText = `${this.activePlayer["color"]} king is in check`;
     if (!canBlockOrKillThreat && !canMoveOutOfCheck) {
       checkDiv.innerText = `Checkmate. ${this.activePlayer["color"]} loses!`;

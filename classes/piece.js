@@ -8,16 +8,16 @@ export class Piece {
     this.x = x;
   }
 
-  isMoveValid(start, end, gameState = {}, activePlayer = {}) {
-    //console.log("isMoveValid call");
+  isMoveValid(y_end, x_end, gameState = {}, activePlayer = {}) {
     if (activePlayer["color"] !== this.color) return false;
+
     const coords = {
-      y_start: start[0],
-      x_start: start[1],
-      y_end: end[0],
-      x_end: end[1],
-      y_abs: Math.abs(start[0] - end[0]),
-      x_abs: Math.abs(start[1] - end[1]),
+      y_start: this.y,
+      x_start: this.x,
+      y_end: y_end,
+      x_end: x_end,
+      y_abs: Math.abs(this.y - y_end),
+      x_abs: Math.abs(this.x - x_end),
     };
     if (
       coords["x_start"] < 0 ||
@@ -114,37 +114,54 @@ export class Piece {
 
     if (landingSpace && landingSpace.color !== this.color) return true;
   }
+
   killPiece(y_end, x_end, gameState) {
-    const pieceTokill = this.gameState[y_end][x_end];
-    if (pieceTokill) {
-      Object.assign(pieceTokill, this.gameState[y_end][x_end]);
+    const killedPiece = gameState[y_end][x_end];
+
+    gameState[y_end][x_end] = null;
+    if (killedPiece) {
+      killedPiece.y = y_end;
+      killedPiece.x = x_end;
     }
-    delete this.gameState[y_end][x_end];
-    if (pieceTokill) {
-      pieceTokill.y = y_end;
-      pieceTokill.x = x_end;
-    }
-    return pieceTokill;
+    return killedPiece;
   }
+
   executeMove(coords, gameState) {
     const { y_end, x_end } = coords;
 
+    gameState[this.y][this.x] = null;
     this.y = y_end;
     this.x = x_end;
 
     // kill piece and return deep clone
-    const killedPiece = this.#killPiece(y_end, x_end);
+    const killedPiece = this.killPiece(y_end, x_end, gameState);
     // Move piece
-    gameState[y_end][x_end] = draggedPiece;
+    gameState[y_end][x_end] = this;
     // Create deep clone of movedPiece
-    const movedPiece = Object.create(Object.getPrototypeOf(draggedPiece));
-    Object.assign(movedPiece, draggedPiece);
-
-    delete gameState[y_start][x_start];
+    // const movedPiece = Object.create(Object.getPrototypeOf(this));
+    // Object.assign(movedPiece, this);
+    // Can we call this up top?
 
     return {
       killedPiece: killedPiece,
-      movedPiece: movedPiece,
+      movedPiece: this,
     };
+  }
+  revertMove(y_start, x_start, movedPiece, killedPiece, gameState) {
+    console.log("revertMove call");
+    console.log(
+      `y_start: ${y_start}, x_start: ${x_start}, movedPiece: ${movedPiece}, killedPiece: ${killedPiece}`
+    );
+    if (killedPiece) {
+      killedPiece.y = movedPiece.y;
+      killedPiece.x = movedPiece.x;
+    }
+
+    gameState[movedPiece.y][movedPiece.x] = killedPiece;
+
+    movedPiece.y = y_start;
+    movedPiece.x = x_start;
+
+    gameState[y_start][x_start] = movedPiece;
   }
 }

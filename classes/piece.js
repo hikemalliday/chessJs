@@ -6,14 +6,6 @@ export class Piece {
     this.hasMoved = false;
     this.y = y;
     this.x = x;
-    this.MOVE_LOOKUP = {
-      pawn: this.#isMoveValidPawn.bind(this),
-      rook: this.#isMoveValidRook.bind(this),
-      knight: this.#isMoveValidKnight.bind(this),
-      bishop: this.#isMoveValidBishop.bind(this),
-      king: this.#isMoveValidKing.bind(this),
-      queen: this.#isMoveValidQueen.bind(this),
-    };
   }
 
   isMoveValid(start, end, gameState = {}, activePlayer = {}) {
@@ -38,151 +30,51 @@ export class Piece {
       coords["y_end"] > 7
     )
       return false;
-    return this.MOVE_LOOKUP[this.type](coords, gameState);
+    // Defined in child
+    return this.MOVE_LOOKUP(coords, gameState);
   }
 
-  #isMoveValidPawn(coords, gameState) {
+  isMoveValidRookHelper(direction, coords, gameState) {
     const { y_start, x_start, y_end, x_end, y_abs, x_abs } = coords;
     const landingSpace = gameState[y_end][x_end];
-    if (this.color == "black") {
-      // Handle double move
-      if (y_start == 1 && y_abs == 2 && x_abs == 0 && !landingSpace)
-        return true;
-      // Handle moving too far or in wrong direction
-      if (y_abs > 1 || x_abs > 1 || y_end < y_start) return false;
-      // Prevent foward kill
-      if (x_abs == 0 && landingSpace) return false;
-      // Prevent diagonal move
-      if (y_abs == 1 && x_abs == 1 && !landingSpace) return false;
-      // Prevent sideways move
-      if (y_abs == 0 && x_abs == 1) return false;
-      // Prevent kill of own color
-      if (
-        landingSpace &&
-        y_end > y_start &&
-        x_abs == 1 &&
-        landingSpace.color == this.color
-      )
+    let y = Number(y_start);
+    let x = Number(x_start);
+    while (x !== Number(x_end) || y !== Number(y_end)) {
+      switch (direction) {
+        case "UP":
+          y -= 1;
+          break;
+        case "DOWN":
+          y += 1;
+          break;
+        case "LEFT":
+          x -= 1;
+          break;
+        case "RIGHT":
+          x += 1;
+          break;
+      }
+      let nextSpace = gameState[y][x];
+      if (nextSpace) {
+        if (x == x_end && y == y_end && nextSpace.color !== this.color) {
+          this.hasMoved = true;
+          return true;
+        }
         return false;
-
-      return true;
-    } else if (this.color == "white") {
-      if (y_start == 6 && y_abs == 2 && x_abs == 0 && !landingSpace)
-        return true;
-      // Handle moving too far or in wrong direction
-      if (y_abs > 1 || x_abs > 1 || y_end > y_start) return false;
-      // Prevent forward kill
-      if (x_abs == 0 && landingSpace) return false;
-      // Prevent diagonal move
-      if (y_abs == 1 && x_abs == 1 && !landingSpace) return false;
-      // Prevent sideways move
-      if (y_abs == 0 && x_abs == 1) return false;
-      // Prevent kill of own color
-      if (
-        landingSpace &&
-        y_end < y_start &&
-        x_abs == 1 &&
-        landingSpace.color == this.color
-      )
-        return false;
-      return true;
-    }
-  }
-
-  #isMoveValidRook(coords, gameState) {
-    const { y_start, x_start, y_end, x_end, y_abs, x_abs } = coords;
-    // Handle invalid non-straight line moves
-    if (y_abs != 0 && x_abs != 0) return false;
-    if (x_abs == 0 && y_end > y_start)
-      return this.#isMoveValidRookHelper("DOWN", coords, gameState);
-    if (x_abs == 0 && y_end < y_start)
-      return this.#isMoveValidRookHelper("UP", coords, gameState);
-    if (y_abs == 0 && x_end > x_start)
-      return this.#isMoveValidRookHelper("RIGHT", coords, gameState);
-    if (y_abs == 0 && x_end < x_start)
-      return this.#isMoveValidRookHelper("LEFT", coords, gameState);
-  }
-
-  #isMoveValidKnight(coords, gameState) {
-    //console.log("isMoveValidKnight");
-    const { y_start, x_start, y_end, x_end, y_abs, x_abs } = coords;
-    const landingSpace = gameState[y_end][x_end];
-    // Handle non-L movements
-    if (y_abs > 2 || x_abs > 2) return false;
-    if (y_abs == 0 || x_abs == 0) return false;
-    if (y_abs == 1 && x_abs != 2) return false;
-    if (y_abs == 2 && x_abs != 1) return false;
-    // Handle valid move to empty space
-    if (!landingSpace) return true;
-    // Handle attempt to land on own color
-    if (landingSpace.color == this.color) return false;
-    return true;
-  }
-
-  #isMoveValidBishop(coords, gameState) {
-    //.log("isMoveValidBishopBlack");
-    const { y_start, x_start, y_end, x_end, y_abs, x_abs } = coords;
-    if (x_abs != y_abs) return false;
-    if (y_end < y_start && x_end < x_start)
-      return this.#isMoveValidBishopHelper("UP_LEFT", coords, gameState);
-    if (y_end < y_start && x_end > x_start)
-      return this.#isMoveValidBishopHelper("UP_RIGHT", coords, gameState);
-    if (y_end > y_start && x_end < x_start)
-      return this.#isMoveValidBishopHelper("DOWN_LEFT", coords, gameState);
-    if (y_end > y_start && x_end > x_start)
-      return this.#isMoveValidBishopHelper("DOWN_RIGHT", coords, gameState);
-  }
-
-  #isMoveValidKing(coords, gameState) {
-    const { y_start, x_start, y_end, x_end, y_abs, x_abs } = coords;
-    const landingSpace = gameState[y_end][x_end];
-
-    if (y_abs > 1 || x_abs > 1) {
-      return false;
-    }
-    if (landingSpace && landingSpace.color == this.color) {
-      return false;
+      }
     }
     if (!landingSpace) {
       this.hasMoved = true;
       return true;
     }
-    this.hasMoved = true;
-    return true;
-  }
-
-  #isMoveValidQueen(coords, gameState) {
-    const { y_start, x_start, y_end, x_end, y_abs, x_abs } = coords;
-    //console.log(coords);
-    let movementType = null;
-    if (y_abs == x_abs) movementType = "bishop";
-    if ((y_abs == 0 && x_abs !== 0) || (y_abs != 0 && x_abs == 0))
-      movementType = "rook";
-    if (!movementType) return false;
-
-    if (movementType == "bishop") {
-      if (y_end < y_start && x_end < x_start)
-        return this.#isMoveValidBishopHelper("UP_LEFT", coords, gameState);
-      if (y_end < y_start && x_end > x_start)
-        return this.#isMoveValidBishopHelper("UP_RIGHT", coords, gameState);
-      if (y_end > y_start && x_end < x_start)
-        return this.#isMoveValidBishopHelper("DOWN_LEFT", coords, gameState);
-      if (y_end > y_start && x_end > x_start)
-        return this.#isMoveValidBishopHelper("DOWN_RIGHT", coords, gameState);
-    }
-    if (movementType == "rook") {
-      if (x_abs == 0 && y_end > y_start)
-        return this.#isMoveValidRookHelper("DOWN", coords, gameState);
-      if (x_abs == 0 && y_end < y_start)
-        return this.#isMoveValidRookHelper("UP", coords, gameState);
-      if (y_abs == 0 && x_end > x_start)
-        return this.#isMoveValidRookHelper("RIGHT", coords, gameState);
-      if (y_abs == 0 && x_end < x_start)
-        return this.#isMoveValidRookHelper("LEFT", coords, gameState);
+    if (landingSpace && landingSpace.color === this.color) return false;
+    if (landingSpace && landingSpace.color !== this.color) {
+      this.hasMoved = true;
+      return true;
     }
   }
 
-  #isMoveValidBishopHelper(direction, coords, gameState) {
+  isMoveValidBishopHelper(direction, coords, gameState) {
     const { y_start, x_start, y_end, x_end, y_abs, x_abs } = coords;
     const landingSpace = gameState[y_end][x_end];
     let y = Number(y_start);
@@ -222,44 +114,37 @@ export class Piece {
 
     if (landingSpace && landingSpace.color !== this.color) return true;
   }
+  killPiece(y_end, x_end, gameState) {
+    const pieceTokill = this.gameState[y_end][x_end];
+    if (pieceTokill) {
+      Object.assign(pieceTokill, this.gameState[y_end][x_end]);
+    }
+    delete this.gameState[y_end][x_end];
+    if (pieceTokill) {
+      pieceTokill.y = y_end;
+      pieceTokill.x = x_end;
+    }
+    return pieceTokill;
+  }
+  executeMove(coords, gameState) {
+    const { y_end, x_end } = coords;
 
-  #isMoveValidRookHelper(direction, coords, gameState) {
-    const { y_start, x_start, y_end, x_end, y_abs, x_abs } = coords;
-    const landingSpace = gameState[y_end][x_end];
-    let y = Number(y_start);
-    let x = Number(x_start);
-    while (x !== Number(x_end) || y !== Number(y_end)) {
-      switch (direction) {
-        case "UP":
-          y -= 1;
-          break;
-        case "DOWN":
-          y += 1;
-          break;
-        case "LEFT":
-          x -= 1;
-          break;
-        case "RIGHT":
-          x += 1;
-          break;
-      }
-      let nextSpace = gameState[y][x];
-      if (nextSpace) {
-        if (x == x_end && y == y_end && nextSpace.color !== this.color) {
-          this.hasMoved = true;
-          return true;
-        }
-        return false;
-      }
-    }
-    if (!landingSpace) {
-      this.hasMoved = true;
-      return true;
-    }
-    if (landingSpace && landingSpace.color === this.color) return false;
-    if (landingSpace && landingSpace.color !== this.color) {
-      this.hasMoved = true;
-      return true;
-    }
+    this.y = y_end;
+    this.x = x_end;
+
+    // kill piece and return deep clone
+    const killedPiece = this.#killPiece(y_end, x_end);
+    // Move piece
+    gameState[y_end][x_end] = draggedPiece;
+    // Create deep clone of movedPiece
+    const movedPiece = Object.create(Object.getPrototypeOf(draggedPiece));
+    Object.assign(movedPiece, draggedPiece);
+
+    delete gameState[y_start][x_start];
+
+    return {
+      killedPiece: killedPiece,
+      movedPiece: movedPiece,
+    };
   }
 }

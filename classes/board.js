@@ -1,11 +1,16 @@
-import { Piece } from "./piece.js";
+import { Pawn } from "./pawn.js";
+import { Rook } from "./rook.js";
+import { Bishop } from "./bishop.js";
+import { Queen } from "./queen.js";
+import { King } from "./king.js";
+import { Knight } from "./knight.js";
 
 export class Board {
   constructor() {
     this.gameState = this.#setStartingGameState();
     this.#generateBoard();
     this.activePlayer = { color: "white" };
-    this.#generateBoardState();
+    this.#generatePieceImages();
     this.#addEventListeners();
   }
   // Array is useless here
@@ -109,38 +114,38 @@ export class Board {
 
   #getPiece(y, x) {
     const pieceLookup = {
-      "0-0": new Piece("rook", "black", this, y, x),
-      "0-1": new Piece("knight", "black", this, y, x),
-      "0-2": new Piece("bishop", "black", this, y, x),
-      "0-3": new Piece("queen", "black", this, y, x),
-      "0-4": new Piece("king", "black", this, y, x),
-      "0-5": new Piece("bishop", "black", this, y, x),
-      "0-6": new Piece("knight", "black", this, y, x),
-      "0-7": new Piece("rook", "black", this, y, x),
-      "1-0": new Piece("pawn", "black", this, y, x),
-      "1-1": new Piece("pawn", "black", this, y, x),
-      "1-2": new Piece("pawn", "black", this, y, x),
-      "1-3": new Piece("pawn", "black", this, y, x),
-      "1-4": new Piece("pawn", "black", this, y, x),
-      "1-5": new Piece("pawn", "black", this, y, x),
-      "1-6": new Piece("pawn", "black", this, y, x),
-      "1-7": new Piece("pawn", "black", this, y, x),
-      "6-0": new Piece("pawn", "white", this, y, x),
-      "6-1": new Piece("pawn", "white", this, y, x),
-      "6-2": new Piece("pawn", "white", this, y, x),
-      "6-3": new Piece("pawn", "white", this, y, x),
-      "6-4": new Piece("pawn", "white", this, y, x),
-      "6-5": new Piece("pawn", "white", this, y, x),
-      "6-6": new Piece("pawn", "white", this, y, x),
-      "6-7": new Piece("pawn", "white", this, y, x),
-      "7-0": new Piece("rook", "white", this, y, x),
-      "7-1": new Piece("knight", "white", this, y, x),
-      "7-2": new Piece("bishop", "white", this, y, x),
-      "7-3": new Piece("queen", "white", this, y, x),
-      "7-4": new Piece("king", "white", this, y, x),
-      "7-5": new Piece("bishop", "white", this, y, x),
-      "7-6": new Piece("knight", "white", this, y, x),
-      "7-7": new Piece("rook", "white", this, y, x),
+      "0-0": new Rook("rook", "black", this, y, x),
+      "0-1": new Knight("knight", "black", this, y, x),
+      "0-2": new Bishop("bishop", "black", this, y, x),
+      "0-3": new Queen("queen", "black", this, y, x),
+      "0-4": new King("king", "black", this, y, x),
+      "0-5": new Bishop("bishop", "black", this, y, x),
+      "0-6": new Knight("knight", "black", this, y, x),
+      "0-7": new Rook("rook", "black", this, y, x),
+      "1-0": new Pawn("pawn", "black", this, y, x),
+      "1-1": new Pawn("pawn", "black", this, y, x),
+      "1-2": new Pawn("pawn", "black", this, y, x),
+      "1-3": new Pawn("pawn", "black", this, y, x),
+      "1-4": new Pawn("pawn", "black", this, y, x),
+      "1-5": new Pawn("pawn", "black", this, y, x),
+      "1-6": new Pawn("pawn", "black", this, y, x),
+      "1-7": new Pawn("pawn", "black", this, y, x),
+      "6-0": new Pawn("pawn", "white", this, y, x),
+      "6-1": new Pawn("pawn", "white", this, y, x),
+      "6-2": new Pawn("pawn", "white", this, y, x),
+      "6-3": new Pawn("pawn", "white", this, y, x),
+      "6-4": new Pawn("pawn", "white", this, y, x),
+      "6-5": new Pawn("pawn", "white", this, y, x),
+      "6-6": new Pawn("pawn", "white", this, y, x),
+      "6-7": new Pawn("pawn", "white", this, y, x),
+      "7-0": new Rook("rook", "white", this, y, x),
+      "7-1": new Knight("knight", "white", this, y, x),
+      "7-2": new Bishop("bishop", "white", this, y, x),
+      "7-3": new Queen("queen", "white", this, y, x),
+      "7-4": new King("king", "white", this, y, x),
+      "7-5": new Bishop("bishop", "white", this, y, x),
+      "7-6": new Knight("knight", "white", this, y, x),
+      "7-7": new Rook("rook", "white", this, y, x),
     };
     return pieceLookup[`${y}-${x}`];
   }
@@ -189,7 +194,7 @@ export class Board {
   }
   // Render pieces on board according to 'gameState'
   // Prolly rename this to something like, generate piece images
-  #generateBoardState() {
+  #generatePieceImages() {
     for (let y = 0; y < this.gameState.length; y++) {
       for (let x = 0; x < this.gameState[0].length; x++) {
         const space = document.getElementById(`${y}-${x}`);
@@ -302,20 +307,9 @@ export class Board {
       });
     });
   }
+  // Move this to Piece?
 
-  #killPiece(y_end, x_end) {
-    const pieceTokill = this.gameState[y_end][x_end];
-    if (pieceTokill) {
-      Object.assign(pieceTokill, this.gameState[y_end][x_end]);
-    }
-    delete this.gameState[y_end][x_end];
-    if (pieceTokill) {
-      pieceTokill.y = y_end;
-      pieceTokill.x = x_end;
-    }
-    return pieceTokill;
-  }
-
+  // Move this to Piece?
   #revertMove(y_start, x_start, y_end, x_end, movedPiece, killedPiece) {
     console.log("revertMove call");
     console.log(
@@ -333,7 +327,7 @@ export class Board {
       killedPiece.x = x_end;
     }
   }
-
+  // Move this to King?
   #canMoveOutOfCheck() {
     const { king, y_king, x_king } = this.#getKing();
     const possibleMoves = {
@@ -501,31 +495,9 @@ export class Board {
     }
     return king ? { king: king, y_king: y_king, x_king: x_king } : null;
   }
+  // Move this to Piece?
 
-  #executeMove(coords, draggedPiece) {
-    const { y_start, x_start, y_end, x_end } = coords;
-
-    if (draggedPiece) {
-      draggedPiece.y = y_end;
-      draggedPiece.x = x_end;
-    }
-
-    // kill piece and return deep clone
-    const killedPiece = this.#killPiece(y_end, x_end);
-    // Move piece
-    this.gameState[y_end][x_end] = draggedPiece;
-    // Create deep clone of movedPiece
-    const movedPiece = Object.create(Object.getPrototypeOf(draggedPiece));
-    Object.assign(movedPiece, draggedPiece);
-
-    delete this.gameState[y_start][x_start];
-
-    return {
-      killedPiece: killedPiece,
-      movedPiece: movedPiece,
-    };
-  }
-
+  // Move this to King?
   #canBlockOrKillThreat(threats) {
     const { king, y_king, x_king } = this.#getKing();
     const spacesSet = new Set();
@@ -555,14 +527,12 @@ export class Board {
         if (isValid) validMoves.push(isValid);
       }
     }
-
     for (const bool of validMoves) {
       if (bool) return true;
     }
-
     return false;
   }
-
+  // Move this to King?
   #getThreatPath(threat, king, spacesSet) {
     let direction = null;
 
@@ -612,7 +582,7 @@ export class Board {
       if (y == threat.y && x == threat.x) break;
     }
   }
-
+  // Move this to King?
   #getThreats() {
     const enemyColor =
       this.activePlayer["color"] == "white"

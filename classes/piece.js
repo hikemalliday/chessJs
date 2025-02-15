@@ -1,9 +1,11 @@
 export class Piece {
-  constructor(type, color, board) {
+  constructor(type, color, board, y, x) {
     this.board = board;
     this.type = type;
     this.color = color;
     this.hasMoved = false;
+    this.y = y;
+    this.x = x;
     this.MOVE_LOOKUP = {
       pawn: this.#isMoveValidPawn.bind(this),
       rook: this.#isMoveValidRook.bind(this),
@@ -15,6 +17,7 @@ export class Piece {
   }
 
   isMoveValid(start, end, gameState = {}, activePlayer = {}) {
+    //console.log("isMoveValid call");
     if (activePlayer["color"] !== this.color) return false;
     const coords = {
       y_start: start[0],
@@ -39,7 +42,6 @@ export class Piece {
   }
 
   #isMoveValidPawn(coords, gameState) {
-    console.log("isMoveValidPawn start");
     const { y_start, x_start, y_end, x_end, y_abs, x_abs } = coords;
     const landingSpace = gameState[y_end][x_end];
     if (this.color == "black") {
@@ -102,7 +104,7 @@ export class Piece {
   }
 
   #isMoveValidKnight(coords, gameState) {
-    console.log("isMoveValidKnight");
+    //console.log("isMoveValidKnight");
     const { y_start, x_start, y_end, x_end, y_abs, x_abs } = coords;
     const landingSpace = gameState[y_end][x_end];
     // Handle non-L movements
@@ -118,7 +120,7 @@ export class Piece {
   }
 
   #isMoveValidBishop(coords, gameState) {
-    console.log("isMoveValidBishopBlack");
+    //.log("isMoveValidBishopBlack");
     const { y_start, x_start, y_end, x_end, y_abs, x_abs } = coords;
     if (x_abs != y_abs) return false;
     if (y_end < y_start && x_end < x_start)
@@ -151,6 +153,7 @@ export class Piece {
 
   #isMoveValidQueen(coords, gameState) {
     const { y_start, x_start, y_end, x_end, y_abs, x_abs } = coords;
+    //console.log(coords);
     let movementType = null;
     if (y_abs == x_abs) movementType = "bishop";
     if ((y_abs == 0 && x_abs !== 0) || (y_abs != 0 && x_abs == 0))

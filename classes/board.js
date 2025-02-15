@@ -7,9 +7,8 @@ export class Board {
     this.activePlayer = { color: "white" };
     this.#generateBoardState();
     this.#addEventListeners();
-    this.#isInCheck();
   }
-
+  // Array is useless here
   #findPiece([y_start, x_start], direction) {
     let y = y_start;
     let x = x_start;
@@ -108,80 +107,40 @@ export class Board {
     return null;
   }
 
-  #isInCheck() {
-    // Need opposite color to find 'check' via 'isMoveValid'
-    const enemyColor =
-      this.activePlayer["color"] == "white"
-        ? { color: "black" }
-        : { color: "white" };
-    const { king, y_king, x_king } = this.#getKing();
-    const directions = [
-      "UP",
-      "DOWN",
-      "LEFT",
-      "RIGHT",
-      "UP_RIGHT",
-      "UP_LEFT",
-      "DOWN_RIGHT",
-      "DOWN_LEFT",
-      "UP_TWO_LEFT_ONE",
-      "UP_ONE_LEFT_TWO",
-      "UP_TWO_RIGHT_ONE",
-      "UP_ONE_RIGHT_TWO",
-      "DOWN_TWO_RIGHT_ONE",
-      "DOWN_ONE_RIGHT_TWO",
-      "DOWN_TWO_LEFT_ONE",
-      "DOWN_ONE_LEFT_TWO",
-    ];
-
-    const isThreat = [];
-
-    for (const direction of directions) {
-      isThreat.push(
-        this.#checkDirection(y_king, x_king, direction, king, enemyColor)
-      );
-    }
-
-    for (const bool of isThreat) {
-      if (bool) return true;
-    }
-    return false;
-  }
-
   #getPiece(y, x) {
     const pieceLookup = {
-      "0-0": new Piece("rook", "black", this),
-      "0-1": new Piece("knight", "black", this),
-      "0-2": new Piece("bishop", "black", this),
-      "0-3": new Piece("queen", "black", this),
-      "0-4": new Piece("king", "black", this),
-      "0-5": new Piece("bishop", "black", this),
-      "0-6": new Piece("knight", "black", this),
-      "0-7": new Piece("rook", "black", this),
-      "1-0": new Piece("pawn", "black", this),
-      "1-1": new Piece("pawn", "black", this),
-      "1-2": new Piece("pawn", "black", this),
-      "1-3": new Piece("pawn", "black", this),
-      "1-4": new Piece("pawn", "black", this),
-      "1-5": new Piece("pawn", "black", this),
-      "1-6": new Piece("pawn", "black", this),
-      "1-7": new Piece("pawn", "black", this),
-      "6-0": new Piece("pawn", "white", this),
-      "6-1": new Piece("pawn", "white", this),
-      "6-2": new Piece("pawn", "white", this),
-      "6-3": new Piece("pawn", "white", this),
-      "6-4": new Piece("pawn", "white", this),
-      "6-5": new Piece("pawn", "white", this),
-      "6-6": new Piece("pawn", "white", this),
-      "6-7": new Piece("pawn", "white", this),
-      "7-0": new Piece("rook", "white", this),
-      "7-1": new Piece("knight", "white", this),
-      "7-2": new Piece("bishop", "white", this),
-      "7-3": new Piece("queen", "white", this),
-      "7-4": new Piece("king", "white", this),
-      "7-5": new Piece("bishop", "white", this),
-      "7-6": new Piece("knight", "white", this),
-      "7-7": new Piece("rook", "white", this),
+      "0-0": new Piece("rook", "black", this, y, x),
+      "0-1": new Piece("knight", "black", this, y, x),
+      "0-2": new Piece("bishop", "black", this, y, x),
+      "0-3": new Piece("queen", "black", this, y, x),
+      "0-4": new Piece("king", "black", this, y, x),
+      "0-5": new Piece("bishop", "black", this, y, x),
+      "0-6": new Piece("knight", "black", this, y, x),
+      "0-7": new Piece("rook", "black", this, y, x),
+      "1-0": new Piece("pawn", "black", this, y, x),
+      "1-1": new Piece("pawn", "black", this, y, x),
+      "1-2": new Piece("pawn", "black", this, y, x),
+      "1-3": new Piece("pawn", "black", this, y, x),
+      "1-4": new Piece("pawn", "black", this, y, x),
+      "1-5": new Piece("pawn", "black", this, y, x),
+      "1-6": new Piece("pawn", "black", this, y, x),
+      "1-7": new Piece("pawn", "black", this, y, x),
+      "6-0": new Piece("pawn", "white", this, y, x),
+      "6-1": new Piece("pawn", "white", this, y, x),
+      "6-2": new Piece("pawn", "white", this, y, x),
+      "6-3": new Piece("pawn", "white", this, y, x),
+      "6-4": new Piece("pawn", "white", this, y, x),
+      "6-5": new Piece("pawn", "white", this, y, x),
+      "6-6": new Piece("pawn", "white", this, y, x),
+      "6-7": new Piece("pawn", "white", this, y, x),
+      "7-0": new Piece("rook", "white", this, y, x),
+      "7-1": new Piece("knight", "white", this, y, x),
+      "7-2": new Piece("bishop", "white", this, y, x),
+      "7-3": new Piece("queen", "white", this, y, x),
+      "7-4": new Piece("king", "white", this, y, x),
+      "7-5": new Piece("bishop", "white", this, y, x),
+      "7-6": new Piece("knight", "white", this, y, x),
+      "7-7": new Piece("rook", "white", this, y, x),
     };
     return pieceLookup[`${y}-${x}`];
   }
@@ -229,6 +188,7 @@ export class Board {
     }
   }
   // Render pieces on board according to 'gameState'
+  // Prolly rename this to something like, generate piece images
   #generateBoardState() {
     for (let y = 0; y < this.gameState.length; y++) {
       for (let x = 0; x < this.gameState[0].length; x++) {
@@ -254,6 +214,7 @@ export class Board {
   }
   // Possibly refactor this, bad code smell
   #addEventListeners() {
+    console.log(this.gameState);
     let draggedImg = null;
     let draggedPiece = null;
     let y_start = null;
@@ -307,6 +268,7 @@ export class Board {
           )
         )
           return;
+
         const { killedPiece, movedPiece } = this.#executeMove(
           {
             y_start: y_start,
@@ -316,8 +278,8 @@ export class Board {
           },
           draggedPiece
         );
-        // Check for check, if true, revert move
-        if (this.#isInCheck()) {
+
+        if (this.#getThreats().length > 0) {
           this.#revertMove(
             y_start,
             x_start,
@@ -328,8 +290,7 @@ export class Board {
           );
           return;
         }
-        // Turn cleanup + check for check for opposing player
-        // Remove the killed piece image
+        // Remove img (if killed piece)
         const img = document
           .getElementById(`${y_end}-${x_end}`)
           .querySelector("img");
@@ -337,49 +298,43 @@ export class Board {
         // Put the dragged image to its resting location
         space.appendChild(draggedImg);
         draggedImg.dataset.coordinates = `${y_end}-${x_end}`;
-
-        // Call 'passTurn()'
-        // Change active player
         this.#passTurn();
-        // Determine check and mutate dom
       });
     });
   }
 
   #killPiece(y_end, x_end) {
-    console.log(`y_end, x_end: ${y_end}, ${x_end}`);
     const pieceTokill = this.gameState[y_end][x_end];
     if (pieceTokill) {
       Object.assign(pieceTokill, this.gameState[y_end][x_end]);
     }
     delete this.gameState[y_end][x_end];
+    if (pieceTokill) {
+      pieceTokill.y = y_end;
+      pieceTokill.x = x_end;
+    }
     return pieceTokill;
   }
 
   #revertMove(y_start, x_start, y_end, x_end, movedPiece, killedPiece) {
+    console.log("revertMove call");
+    console.log(
+      `y_start: ${y_start}, x_start: ${x_start}, y_end: ${y_end}, x_end: ${x_end}, movedPiece: ${movedPiece}, killedPiece: ${killedPiece}`
+    );
+    if (movedPiece) {
+      movedPiece.y = y_start;
+      movedPiece.x = x_start;
+    }
     this.gameState[y_start][x_start] = movedPiece;
     delete this.gameState[y_end][x_end];
     this.gameState[y_end][x_end] = killedPiece;
-  }
-
-  #checkDirection(king_y, king_x, direction, king, enemyColor) {
-    const foundPiece = this.#findPiece([king_y, king_x], direction);
-    if (foundPiece) {
-      const { piece, y_piece, x_piece } = foundPiece;
-      if (piece.color !== king.color) {
-        return piece.isMoveValid(
-          [y_piece, x_piece],
-          [king_y, king_x],
-          this.gameState,
-          enemyColor
-        );
-      }
+    if (killedPiece) {
+      killedPiece.y = y_end;
+      killedPiece.x = x_end;
     }
-    return false;
   }
 
   #canMoveOutOfCheck() {
-    console.log("canMoveOutOfCheck call");
     const { king, y_king, x_king } = this.#getKing();
     const possibleMoves = {
       UP: {
@@ -499,17 +454,10 @@ export class Board {
     };
     const validMoves = [];
     for (const direction in possibleMoves) {
-      // console.log("direction");
-      // console.log(direction);
-      // console.log("king:");
-      // console.log(king);
       // We need to loop over all directions and perform those moves if valid
       const { y_king, x_king, y_end, x_end } =
         possibleMoves[direction]["coords"];
       if (!possibleMoves[direction]["is_valid"]) continue;
-      // console.log(
-      //   `canMoveOutOfCheck coords: is_valid: ${is_valid}, y_king: ${y_king}, x_king: ${x_king}, y_end: ${y_end}, x_end: ${x_end}`
-      // );
       const { killedPiece, movedPiece } = this.#executeMove(
         {
           y_start: y_king,
@@ -519,7 +467,7 @@ export class Board {
         },
         king
       );
-      const inCheck = this.#isInCheck();
+      const inCheck = this.#getThreats().length > 0;
       if (inCheck) validMoves.push(false);
       else validMoves.push(true);
       this.#revertMove(y_king, x_king, y_end, x_end, movedPiece, killedPiece);
@@ -556,10 +504,12 @@ export class Board {
 
   #executeMove(coords, draggedPiece) {
     const { y_start, x_start, y_end, x_end } = coords;
-    // console.log("executeMove.coords:");
-    // console.log(
-    //   `y_start: ${y_start}, x_start: ${x_start}, y_end: ${y_end}, x_end: ${x_end}`
-    // );
+
+    if (draggedPiece) {
+      draggedPiece.y = y_end;
+      draggedPiece.x = x_end;
+    }
+
     // kill piece and return deep clone
     const killedPiece = this.#killPiece(y_end, x_end);
     // Move piece
@@ -567,6 +517,7 @@ export class Board {
     // Create deep clone of movedPiece
     const movedPiece = Object.create(Object.getPrototypeOf(draggedPiece));
     Object.assign(movedPiece, draggedPiece);
+
     delete this.gameState[y_start][x_start];
 
     return {
@@ -575,8 +526,142 @@ export class Board {
     };
   }
 
+  #canBlockOrKillThreat(threats) {
+    const { king, y_king, x_king } = this.#getKing();
+    const spacesSet = new Set();
+    for (const threat of threats) {
+      this.#getThreatPath(threat, king, spacesSet);
+    }
+    // We now have the set of spaces we must block.
+    console.log("canBlockOrKillThreat.spacesSet:");
+    console.log(spacesSet);
+    const pieces = [];
+    for (const row of this.gameState) {
+      for (const piece of row) {
+        if (piece?.color == this.activePlayer["color"] && piece.type != "king")
+          pieces.push(piece);
+      }
+    }
+
+    const validMoves = [];
+    for (const space of spacesSet) {
+      for (const piece of pieces) {
+        const isValid = piece.isMoveValid(
+          [piece.y, piece.x],
+          space,
+          this.gameState,
+          this.activePlayer
+        );
+        if (isValid) validMoves.push(isValid);
+      }
+    }
+
+    for (const bool of validMoves) {
+      if (bool) return true;
+    }
+
+    return false;
+  }
+
+  #getThreatPath(threat, king, spacesSet) {
+    let direction = null;
+
+    if (threat.y > king.y && threat.x < king.x) direction = "DOWN_LEFT";
+    else if (threat.y > king.y && threat.x > king.x) direction = "DOWN_RIGHT";
+    else if (threat.y < king.y && threat.x < king.x) direction = "UP_LEFT";
+    else if (threat.y < king.y && threat.x > king.x) direction = "UP_RIGHT";
+    else if (threat.y > king.y) direction = "UP";
+    else if (threat.y < king.y) direction = "DOWN";
+    else if (threat.x < king.x) direction = "LEFT";
+    else if (threat.x > king.x) direction = "RIGHT";
+
+    let y = king.y;
+    let x = king.x;
+
+    while (true) {
+      switch (direction) {
+        case "UP":
+          y = y - 1;
+          break;
+        case "DOWN":
+          y = y + 1;
+          break;
+        case "LEFT":
+          x = x - 1;
+          break;
+        case "RIGHT":
+          x = x + 1;
+        case "DOWN_LEFT":
+          y = y + 1;
+          x = x - 1;
+          break;
+        case "DOWN_RIGHT":
+          y = y + 1;
+          x = x + 1;
+          break;
+        case "UP_LEFT":
+          y = y - 1;
+          x = x - 1;
+          break;
+        case "UP_RIGHT":
+          y = y - 1;
+          x = x + 1;
+          break;
+      }
+      spacesSet.add([y, x]);
+      if (y == threat.y && x == threat.x) break;
+    }
+  }
+
+  #getThreats() {
+    const enemyColor =
+      this.activePlayer["color"] == "white"
+        ? { color: "black" }
+        : { color: "white" };
+    const { king, y_king, x_king } = this.#getKing();
+    const directions = [
+      "UP",
+      "DOWN",
+      "LEFT",
+      "RIGHT",
+      "UP_RIGHT",
+      "UP_LEFT",
+      "DOWN_RIGHT",
+      "DOWN_LEFT",
+      "UP_TWO_LEFT_ONE",
+      "UP_ONE_LEFT_TWO",
+      "UP_TWO_RIGHT_ONE",
+      "UP_ONE_RIGHT_TWO",
+      "DOWN_TWO_RIGHT_ONE",
+      "DOWN_ONE_RIGHT_TWO",
+      "DOWN_TWO_LEFT_ONE",
+      "DOWN_ONE_LEFT_TWO",
+    ];
+
+    const threats = [];
+
+    for (const direction of directions) {
+      const foundPiece = this.#findPiece([y_king, x_king], direction);
+      if (foundPiece) {
+        const { piece, y_piece, x_piece } = foundPiece;
+        if (piece.color !== king.color) {
+          const isValid = piece.isMoveValid(
+            [y_piece, x_piece],
+            [y_king, x_king],
+            this.gameState,
+            enemyColor
+          );
+          if (isValid) threats.push(piece);
+        }
+      }
+    }
+    // console.log("getThreats.threats:");
+    // console.log(threats);
+    return threats;
+  }
+  // Get all pieces for a player (used for determining checkmate)
+
   #passTurn() {
-    console.log("Pass Turn Call");
     const activePlayerDiv = document.getElementById("active-player-div");
     activePlayerDiv.innerText = "Active player: White";
     this.activePlayer["color"] == "white"
@@ -585,13 +670,19 @@ export class Board {
     this.activePlayer["color"] == "white"
       ? (this.activePlayer["color"] = "black")
       : (this.activePlayer["color"] = "white");
-    const inCheck = this.#isInCheck();
+    const inCheck = this.#getThreats().length > 0;
     const checkDiv = document.getElementById("check") ?? false;
     if (!inCheck) {
       checkDiv.innerText = "";
       return;
     }
     const canMoveOutOfCheck = this.#canMoveOutOfCheck();
+    console.log(`canMoveOutOfCheck: ${canMoveOutOfCheck}`);
+    const canBlockOrKillThreat = this.#canBlockOrKillThreat(this.#getThreats());
+    console.log(`canBlockOrKillThreat: ${canBlockOrKillThreat}`);
     checkDiv.innerText = `${this.activePlayer["color"]} king is in check`;
+    if (!canBlockOrKillThreat && !canMoveOutOfCheck) {
+      checkDiv.innerText = `Checkmate. ${this.activePlayer["color"]} loses!`;
+    }
   }
 }

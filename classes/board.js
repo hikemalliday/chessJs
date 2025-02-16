@@ -302,7 +302,6 @@ export class Board {
       });
     });
   }
-
   // Move this to King?
   #canMoveOutOfCheck() {
     const king = this.#getKing();

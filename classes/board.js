@@ -192,7 +192,6 @@ export class Board {
     }
   }
   // Render pieces on board according to 'gameState'
-  // Prolly rename this to something like, generate piece images
   #generatePieceImages() {
     for (let y = 0; y < this.gameState.length; y++) {
       for (let x = 0; x < this.gameState[0].length; x++) {
@@ -303,9 +302,6 @@ export class Board {
       });
     });
   }
-  // Move this to Piece?
-
-  // Move this to Piece?
 
   // Move this to King?
   #canMoveOutOfCheck() {
@@ -578,8 +574,7 @@ export class Board {
         ? { color: "black" }
         : { color: "white" };
     const king = this.#getKing();
-    console.log("king:");
-    console.log(king);
+
     const directions = [
       "UP",
       "DOWN",
@@ -606,14 +601,12 @@ export class Board {
       if (foundPiece) {
         const piece = foundPiece; // This assignement is useless I think
         if (piece.color !== king.color) {
-          console.log("piece does not equal king color");
           const isValid = piece.isMoveValid(
             king.y,
             king.x,
             this.gameState,
             enemyColor
           );
-          // console.log(`getThreats.isValid: ${isValid}`);
           if (isValid) threats.push(piece);
         }
       }

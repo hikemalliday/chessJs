@@ -1,2 +1,0 @@
-- When checking for 'check', have the pass the opposite of 'activePlace[color]' to the helpers, because we are checking if a move is valid from the pov of foudn enemy Piece
-- Game is started with calling a single 'Board' instance. All 'Pieces' have access to this single instance.

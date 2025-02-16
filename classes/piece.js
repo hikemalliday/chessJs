@@ -133,14 +133,9 @@ export class Piece {
     this.y = y_end;
     this.x = x_end;
 
-    // kill piece and return deep clone
     const killedPiece = this.killPiece(y_end, x_end, gameState);
     // Move piece
     gameState[y_end][x_end] = this;
-    // Create deep clone of movedPiece
-    // const movedPiece = Object.create(Object.getPrototypeOf(this));
-    // Object.assign(movedPiece, this);
-    // Can we call this up top?
 
     return {
       killedPiece: killedPiece,
@@ -148,10 +143,6 @@ export class Piece {
     };
   }
   revertMove(y_start, x_start, movedPiece, killedPiece, gameState) {
-    console.log("revertMove call");
-    console.log(
-      `y_start: ${y_start}, x_start: ${x_start}, movedPiece: ${movedPiece}, killedPiece: ${killedPiece}`
-    );
     if (killedPiece) {
       killedPiece.y = movedPiece.y;
       killedPiece.x = movedPiece.x;

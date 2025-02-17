@@ -147,6 +147,10 @@ export class Piece {
       killedPiece.y = movedPiece.y;
       killedPiece.x = movedPiece.x;
     }
+    // ai suggestion
+    //   if (killedPiece) {
+    //     gameState[killedPiece.y][killedPiece.x] = killedPiece;  // Restore killed piece
+    // }
 
     gameState[movedPiece.y][movedPiece.x] = killedPiece;
 
@@ -154,5 +158,26 @@ export class Piece {
     movedPiece.x = x_start;
 
     gameState[y_start][x_start] = movedPiece;
+  }
+
+  isMoveSafe(y, x, gameState) {
+    const deepCopy = gameState.map((row) =>
+      row.map((space) =>
+        space
+          ? new space.constructor(
+              space.type,
+              space.color,
+              space.board,
+              space.y,
+              space.x
+            )
+          : null
+      )
+    );
+    const piece = deepCopy[this.y][this.x];
+    piece.executeMove({ y_end: y, x_end: x }, deepCopy);
+    const threats = this.board.getThreats(deepCopy);
+
+    return threats.length == 0;
   }
 }

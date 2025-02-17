@@ -4,17 +4,18 @@ import { Bishop } from "./bishop.js";
 import { Queen } from "./queen.js";
 import { King } from "./king.js";
 import { Knight } from "./knight.js";
+//import { doubleCheck } from "../alternate-board-states/board-states.js";
 
 export class Board {
   constructor() {
     this.gameState = this.#setStartingGameState();
     this.#generateBoard();
-    this.activePlayer = { color: "white" };
+    this.activePlayer = { color: "white" }; // switch back to white after testing double checl
     this.#generatePieceImages();
     this.#addEventListeners();
   }
 
-  #findPiece(y_start, x_start, direction) {
+  #findPiece(y_start, x_start, direction, gameState) {
     let y = y_start;
     let x = x_start;
     // Find Knight
@@ -65,7 +66,7 @@ export class Board {
           break;
       }
       if (y < 0 || y > 7 || x < 0 || x > 7) return null;
-      const piece = this.gameState[y][x];
+      const piece = gameState[y][x];
       return piece;
     }
 
@@ -104,7 +105,7 @@ export class Board {
       // Check bounds before accessing the game state
       if (y < 0 || y > 7 || x < 0 || x > 7) break;
 
-      const piece = this.gameState[y][x];
+      const piece = gameState[y][x];
       if (piece) return piece;
     }
 
@@ -155,6 +156,7 @@ export class Board {
       const row = [];
       for (let x = 0; x < 8; x++) {
         row.push(this.#getPiece(y, x));
+        //row.push(doubleCheck(y, x, this));
       }
       gameState.push(row);
     }
@@ -272,7 +274,14 @@ export class Board {
         )
           return;
 
-        const { killedPiece, movedPiece } = draggedPiece.executeMove(
+        const moveIsSafe = draggedPiece.isMoveSafe(
+          y_end,
+          x_end,
+          this.gameState
+        );
+        if (!moveIsSafe) return;
+
+        draggedPiece.executeMove(
           {
             y_end: y_end,
             x_end: x_end,
@@ -280,16 +289,6 @@ export class Board {
           this.gameState
         );
 
-        if (this.#getThreats().length > 0) {
-          draggedPiece.revertMove(
-            y_start,
-            x_start,
-            movedPiece,
-            killedPiece,
-            this.gameState
-          );
-          return;
-        }
         // Remove img (if killed piece)
         const img = document
           .getElementById(`${y_end}-${x_end}`)
@@ -304,7 +303,7 @@ export class Board {
   }
   // Move this to King?
   #canMoveOutOfCheck() {
-    const king = this.#getKing();
+    const king = this.#getKing(this.gameState);
     const possibleMoves = {
       UP: {
         is_valid: king.isMoveValid(
@@ -425,24 +424,8 @@ export class Board {
       const { y_start, x_start, y_end, x_end } =
         possibleMoves[direction]["coords"];
       if (!possibleMoves[direction]["is_valid"]) continue;
-      const { killedPiece, movedPiece } = king.executeMove(
-        {
-          y_end: y_end,
-          x_end: x_end,
-        },
-        this.gameState
-      );
-      const inCheck = this.#getThreats().length > 0;
-      if (inCheck) validMoves.push(false);
-      else validMoves.push(true);
-
-      king.revertMove(
-        y_start,
-        x_start,
-        movedPiece,
-        killedPiece,
-        this.gameState
-      );
+      const moveIsSafe = king.isMoveSafe(y_end, x_end, this.gameState);
+      validMoves.push(moveIsSafe);
     }
 
     for (const bool of validMoves) {
@@ -451,12 +434,12 @@ export class Board {
     return false;
   }
 
-  #getKing() {
+  #getKing(gameState) {
     let king = null;
 
-    for (let i = 0; i < this.gameState.length; i++) {
-      for (let j = 0; j < this.gameState[0].length; j++) {
-        const piece = this.gameState[i][j];
+    for (let i = 0; i < gameState.length; i++) {
+      for (let j = 0; j < gameState[0].length; j++) {
+        const piece = gameState[i][j];
         if (
           piece?.color == this.activePlayer["color"] &&
           piece.type == "king"
@@ -470,7 +453,7 @@ export class Board {
   }
   // Could pass king to this as well if we wanted to decouple
   #canBlockOrKillThreat(threats) {
-    const king = this.#getKing();
+    const king = this.#getKing(this.gameState);
     const spacesSet = new Set();
     for (const threat of threats) {
       this.#getThreatPath(threat, king, spacesSet);
@@ -496,21 +479,14 @@ export class Board {
           this.activePlayer
         );
         if (isValid) {
-          const { killedPiece, movedPiece } = piece.executeMove(
-            { y_end: y, x_end: x },
-            this.gameState
-          );
-          if (this.#getThreats() > 0) {
-            validMoves.push(false);
-            continue;
-          }
-          piece.revertMove(y, x, movedPiece, killedPiece, this.gameState);
-          validMoves.push(isValid);
+          validMoves.push([piece, [y, x]]);
         }
       }
     }
-    for (const bool of validMoves) {
-      if (bool) return true;
+
+    for (const [piece, [y, x]] of validMoves) {
+      const moveIsSafe = piece.isMoveSafe(y, x, this.gameState);
+      if (moveIsSafe) return true;
     }
     return false;
   }
@@ -543,6 +519,7 @@ export class Board {
           break;
         case "RIGHT":
           x = x + 1;
+          break;
         case "DOWN_LEFT":
           y = y + 1;
           x = x - 1;
@@ -567,12 +544,12 @@ export class Board {
   // Move this to King?
   // To decouple this from Board, you could just pass in the king
   // But you would also have to find all pieces and pass to this function as well...
-  #getThreats() {
+  getThreats(gameState) {
     const enemyColor =
       this.activePlayer["color"] == "white"
         ? { color: "black" }
         : { color: "white" };
-    const king = this.#getKing();
+    const king = this.#getKing(gameState);
 
     const directions = [
       "UP",
@@ -596,14 +573,14 @@ export class Board {
     const threats = [];
 
     for (const direction of directions) {
-      const foundPiece = this.#findPiece(king.y, king.x, direction);
+      const foundPiece = this.#findPiece(king.y, king.x, direction, gameState);
       if (foundPiece) {
         const piece = foundPiece; // This assignement is useless I think
         if (piece.color !== king.color) {
           const isValid = piece.isMoveValid(
             king.y,
             king.x,
-            this.gameState,
+            gameState,
             enemyColor
           );
           if (isValid) threats.push(piece);
@@ -622,9 +599,9 @@ export class Board {
     this.activePlayer["color"] == "white"
       ? (this.activePlayer["color"] = "black")
       : (this.activePlayer["color"] = "white");
-    const inCheck = this.#getThreats().length > 0;
+    const threats = this.getThreats(this.gameState);
     const checkDiv = document.getElementById("check") ?? false;
-    if (!inCheck) {
+    if (threats.length == 0) {
       checkDiv.innerText = "";
       return;
     }
@@ -632,7 +609,7 @@ export class Board {
     let canBlockOrKillThreat = null;
     canMoveOutOfCheck = this.#canMoveOutOfCheck();
     if (!canMoveOutOfCheck) {
-      canBlockOrKillThreat = this.#canBlockOrKillThreat(this.#getThreats());
+      canBlockOrKillThreat = this.#canBlockOrKillThreat(threats);
     }
     checkDiv.innerText = `${this.activePlayer["color"]} king is in check`;
     if (!canBlockOrKillThreat && !canMoveOutOfCheck) {

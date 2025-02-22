@@ -12,7 +12,7 @@ export class Queen extends Piece {
     if (y_abs == x_abs) movementType = "bishop";
     if ((y_abs == 0 && x_abs !== 0) || (y_abs != 0 && x_abs == 0))
       movementType = "rook";
-    if (!movementType) return false;
+    if (!movementType) return 0;
 
     if (movementType == "bishop") {
       if (y_end < y_start && x_end < x_start)

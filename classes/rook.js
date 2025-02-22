@@ -8,7 +8,7 @@ export class Rook extends Piece {
   #isMoveValidRook(coords, gameState) {
     const { y_start, x_start, y_end, x_end, y_abs, x_abs } = coords;
     // Handle invalid non-straight line moves
-    if (y_abs != 0 && x_abs != 0) return false;
+    if (y_abs != 0 && x_abs != 0) return 0;
     if (x_abs == 0 && y_end > y_start)
       return this.isMoveValidRookHelper("DOWN", coords, gameState);
     if (x_abs == 0 && y_end < y_start)

@@ -10,16 +10,15 @@ export class Pawn extends Piece {
     const landingSpace = gameState[y_end][x_end];
     if (this.color == "black") {
       // Handle double move
-      if (y_start == 1 && y_abs == 2 && x_abs == 0 && !landingSpace)
-        return true;
+      if (y_start == 1 && y_abs == 2 && x_abs == 0 && !landingSpace) return 1;
       // Handle moving too far or in wrong direction
-      if (y_abs > 1 || x_abs > 1 || y_end < y_start) return false;
+      if (y_abs > 1 || x_abs > 1 || y_end < y_start) return 0;
       // Prevent foward kill
-      if (x_abs == 0 && landingSpace) return false;
+      if (x_abs == 0 && landingSpace) return 0;
       // Prevent diagonal move
-      if (y_abs == 1 && x_abs == 1 && !landingSpace) return false;
+      if (y_abs == 1 && x_abs == 1 && !landingSpace) return 0;
       // Prevent sideways move
-      if (y_abs == 0 && x_abs == 1) return false;
+      if (y_abs == 0 && x_abs == 1) return 0;
       // Prevent kill of own color
       if (
         landingSpace &&
@@ -27,20 +26,19 @@ export class Pawn extends Piece {
         x_abs == 1 &&
         landingSpace.color == this.color
       )
-        return false;
+        return 0;
 
-      return true;
+      return 1;
     } else if (this.color == "white") {
-      if (y_start == 6 && y_abs == 2 && x_abs == 0 && !landingSpace)
-        return true;
+      if (y_start == 6 && y_abs == 2 && x_abs == 0 && !landingSpace) return 1;
       // Handle moving too far or in wrong direction
-      if (y_abs > 1 || x_abs > 1 || y_end > y_start) return false;
+      if (y_abs > 1 || x_abs > 1 || y_end > y_start) return 0;
       // Prevent forward kill
-      if (x_abs == 0 && landingSpace) return false;
+      if (x_abs == 0 && landingSpace) return 0;
       // Prevent diagonal move
-      if (y_abs == 1 && x_abs == 1 && !landingSpace) return false;
+      if (y_abs == 1 && x_abs == 1 && !landingSpace) return 0;
       // Prevent sideways move
-      if (y_abs == 0 && x_abs == 1) return false;
+      if (y_abs == 0 && x_abs == 1) return 0;
       // Prevent kill of own color
       if (
         landingSpace &&
@@ -48,8 +46,8 @@ export class Pawn extends Piece {
         x_abs == 1 &&
         landingSpace.color == this.color
       )
-        return false;
-      return true;
+        return 0;
+      return 1;
     }
   }
 }

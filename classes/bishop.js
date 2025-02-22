@@ -8,7 +8,7 @@ export class Bishop extends Piece {
   #isMoveValidBishop(coords, gameState) {
     //.log("isMoveValidBishopBlack");
     const { y_start, x_start, y_end, x_end, y_abs, x_abs } = coords;
-    if (x_abs != y_abs) return false;
+    if (x_abs != y_abs) return 0;
     if (y_end < y_start && x_end < x_start)
       return this.isMoveValidBishopHelper("UP_LEFT", coords, gameState);
     if (y_end < y_start && x_end > x_start)

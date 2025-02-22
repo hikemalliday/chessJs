@@ -58,19 +58,19 @@ export class Piece {
       if (nextSpace) {
         if (x == x_end && y == y_end && nextSpace.color !== this.color) {
           this.hasMoved = true;
-          return true;
+          return 1;
         }
-        return false;
+        return 0;
       }
     }
     if (!landingSpace) {
-      this.hasMoved = true;
-      return true;
+      this.hasMoved = 1;
+      return 1;
     }
-    if (landingSpace && landingSpace.color === this.color) return false;
+    if (landingSpace && landingSpace.color === this.color) return 0;
     if (landingSpace && landingSpace.color !== this.color) {
-      this.hasMoved = true;
-      return true;
+      this.hasMoved = 1;
+      return 1;
     }
   }
 
@@ -103,16 +103,16 @@ export class Piece {
 
       if (nextSpace) {
         if (x == x_end && y == y_end && nextSpace.color !== this.color)
-          return true;
+          return 1;
 
-        return false;
+        return 0;
       }
     }
-    if (!landingSpace) return true;
+    if (!landingSpace) return 1;
 
-    if (landingSpace && landingSpace.color === this.color) return false;
+    if (landingSpace && landingSpace.color === this.color) return 0;
 
-    if (landingSpace && landingSpace.color !== this.color) return true;
+    if (landingSpace && landingSpace.color !== this.color) return 1;
   }
 
   killPiece(y_end, x_end, gameState) {
@@ -128,15 +128,12 @@ export class Piece {
   // refactor to just pass y, x
   executeMove(coords, gameState) {
     const { y_end, x_end } = coords;
-
     gameState[this.y][this.x] = null;
     this.y = y_end;
     this.x = x_end;
-
     const killedPiece = this.killPiece(y_end, x_end, gameState);
     // Move piece
     gameState[y_end][x_end] = this;
-
     return {
       killedPiece: killedPiece,
       movedPiece: this,

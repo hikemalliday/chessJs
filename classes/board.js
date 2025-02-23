@@ -5,114 +5,28 @@ import { Queen } from "./queen.js";
 import { King } from "./king.js";
 import { Knight } from "./knight.js";
 import { doubleCheck, castle } from "../alternate-board-states/board-states.js";
+import {
+  executeRegularMove,
+  executeCastleLeft,
+  executeCastleRight,
+} from "../helpers/movement.js";
 
 export class Board {
   constructor() {
     this.gameState = this.#setStartingGameState();
     this.#generateBoard();
     this.activePlayer = { color: "white" }; // switch back to white after testing double checl
-    this.#generatePieceImages();
+    this.#generatePieceImages(this.gameState);
     this.#addEventListeners();
     this.EXECUTE_MOVE = {
-      1: this.#executeRegularMove,
-      2: this.#executeCastleLeft,
-      3: this.#executeCastleRight,
+      1: executeRegularMove,
+      2: executeCastleLeft,
+      3: executeCastleRight,
     };
-  }
-
-  #findPiece(y_start, x_start, direction, gameState) {
-    let y = y_start;
-    let x = x_start;
-    // Find Knight
-    const knightMoves = new Set([
-      "UP_TWO_LEFT_ONE",
-      "UP_ONE_LEFT_TWO",
-      "UP_TWO_RIGHT_ONE",
-      "UP_ONE_RIGHT_TWO",
-      "DOWN_TWO_RIGHT_ONE",
-      "DOWN_ONE_RIGHT_TWO",
-      "DOWN_TWO_LEFT_ONE",
-      "DOWN_ONE_LEFT_TWO",
-    ]);
-    // Not sure why theses need to be disjointed but whatever
-    if (knightMoves.has(direction)) {
-      switch (direction) {
-        case "UP_TWO_LEFT_ONE":
-          y = y - 2;
-          x = x - 1;
-          break;
-        case "UP_ONE_LEFT_TWO":
-          y = y - 1;
-          x = x - 2;
-          break;
-        case "UP_TWO_RIGHT_ONE":
-          y = y - 2;
-          x = x + 1;
-          break;
-        case "UP_ONE_RIGHT_TWO":
-          y = y - 1;
-          x = x + 2;
-          break;
-        case "DOWN_TWO_RIGHT_ONE":
-          y = y + 2;
-          x = x + 1;
-          break;
-        case "DOWN_ONE_RIGHT_TWO":
-          y = y + 1;
-          x = x + 2;
-          break;
-        case "DOWN_ONE_LEFT_TWO":
-          y = y + 1;
-          x = x - 2;
-          break;
-        case "DOWN_TWO_LEFT_ONE":
-          y = y + 2;
-          x = x - 1;
-          break;
-      }
-      if (y < 0 || y > 7 || x < 0 || x > 7) return null;
-      const piece = gameState[y][x];
-      return piece;
-    }
-    while (true) {
-      // Move first
-      switch (direction) {
-        case "UP":
-          y -= 1;
-          break;
-        case "DOWN":
-          y += 1;
-          break;
-        case "LEFT":
-          x -= 1;
-          break;
-        case "RIGHT":
-          x += 1;
-          break;
-        case "UP_LEFT":
-          y -= 1;
-          x -= 1;
-          break;
-        case "UP_RIGHT":
-          y -= 1;
-          x += 1;
-          break;
-        case "DOWN_LEFT":
-          y += 1;
-          x -= 1;
-          break;
-        case "DOWN_RIGHT":
-          y += 1;
-          x += 1;
-          break;
-      }
-      // Check bounds before accessing the game state
-      if (y < 0 || y > 7 || x < 0 || x > 7) break;
-
-      const piece = gameState[y][x];
-      if (piece) return piece;
-    }
-    return null;
+    this.KING = {
+      black: this.getKing(this.gameState, "black"),
+      white: this.getKing(this.gameState, "white"),
+    };
   }
 
   #getPiece(y, x) {
@@ -158,9 +72,9 @@ export class Board {
     for (let y = 0; y < 8; y++) {
       const row = [];
       for (let x = 0; x < 8; x++) {
-        //row.push(this.#getPiece(y, x));
+        row.push(this.#getPiece(y, x));
         //row.push(doubleCheck(y, x, this));
-        row.push(castle(y, x, this));
+        //row.push(castle(y, x, this));
       }
       gameState.push(row);
     }
@@ -198,12 +112,12 @@ export class Board {
     }
   }
   // Render pieces on board according to 'gameState'
-  #generatePieceImages() {
-    for (let y = 0; y < this.gameState.length; y++) {
-      for (let x = 0; x < this.gameState[0].length; x++) {
+  #generatePieceImages(gameState) {
+    for (let y = 0; y < gameState.length; y++) {
+      for (let x = 0; x < gameState[0].length; x++) {
         const space = document.getElementById(`${y}-${x}`);
         // If gamestate[y][x] is null, remove img
-        if (!this.gameState[y][x]) {
+        if (!gameState[y][x]) {
           const img = space.querySelector("img");
           if (img) {
             img.remove();
@@ -211,7 +125,7 @@ export class Board {
           continue;
         }
 
-        const piece = this.gameState[y][x];
+        const piece = gameState[y][x];
         const img = document.createElement("img");
         img.src = `./pieces/${piece.type}-${piece.color}.svg`;
         img.width = 50;
@@ -220,6 +134,20 @@ export class Board {
         space.appendChild(img);
       }
     }
+  }
+
+  getKing(gameState, color) {
+    let king = null;
+    for (let i = 0; i < gameState.length; i++) {
+      for (let j = 0; j < gameState[0].length; j++) {
+        const piece = gameState[i][j];
+        if (piece?.color == color && piece.type == "king") {
+          king = piece;
+          break;
+        }
+      }
+    }
+    return king;
   }
   // Possibly refactor this, bad code smell
   #addEventListeners() {
@@ -290,418 +218,6 @@ export class Board {
     });
   }
 
-  #executeCastleRight(
-    y_end,
-    x_end,
-    gameState,
-    space,
-    draggedPiece,
-    draggedImg
-  ) {
-    const king = draggedPiece;
-    const kingImg = draggedImg;
-    let rook = y_end == 7 ? gameState[7][7] : gameState[0][7];
-    let rookImg =
-      y_end == 7
-        ? document.querySelector(`img[data-coordinates="${7}-${7}"]`)
-        : document.querySelector(`img[data-coordinates="${0}-${7}"]`);
-    const rookLandingSpace =
-      y_end == 7
-        ? document.getElementById(`${7}-${5}`)
-        : document.getElementById(`${0}-${5}`);
-    const kingLandingSpace = document.getElementById(`${y_end}-${x_end}`);
-    // Check for threats before move and on first and second space
-    let moveIsSafe = king.isMoveSafe(king.y, king.x, gameState);
-    if (!moveIsSafe) return false;
-    moveIsSafe = king.isMoveSafe(king.y, king.x + 1, gameState);
-    if (!moveIsSafe) return false;
-    moveIsSafe = king.isMoveSafe(king.y, king.x + 2, gameState);
-    if (!moveIsSafe) return false;
-    // Moved pieces
-    gameState[y_end][x_end] = king;
-    if (y_end == 0) {
-      gameState[0][5] = rook;
-    } else {
-      gameState[7][5] = rook;
-    }
-    // Move images
-    kingLandingSpace.append(kingImg);
-    rookLandingSpace.append(rookImg);
-    // Delete old elements and update pieces + images
-    gameState[king.y][king.x] = null;
-    gameState[rook.y][rook.x] = null;
-    king.y = y_end;
-    king.x = x_end;
-    rook.y = y_end == 7 ? 7 : 0;
-    rook.x = 5;
-    king.hasMoved = true;
-    rook.hasMoved = true;
-    kingImg.dataset.coordinates = `${king.y}-${king.x}`;
-    rookImg.dataset.coordinates = `${rook.y}-${rook.x}`;
-    return true;
-  }
-
-  #executeCastleLeft(y_end, x_end, gameState, space, draggedPiece, draggedImg) {
-    // Rook landing space will be x = 3
-    console.log("executeCastleLeftCall");
-    const king = draggedPiece;
-    const kingImg = draggedImg;
-    let rook = y_end == 7 ? gameState[7][0] : gameState[0][0];
-    let rookImg =
-      y_end == 7
-        ? document.querySelector(`img[data-coordinates="${7}-${0}"]`)
-        : document.querySelector(`img[data-coordinates="${0}-${0}"]`);
-    const rookLandingSpace =
-      y_end == 7
-        ? document.getElementById(`${7}-${3}`)
-        : document.getElementById(`${0}-${3}`);
-    const kingLandingSpace = document.getElementById(`${y_end}-${x_end}`);
-    // Check for threats before move, and on first and second space
-
-    let moveIsSafe = king.isMoveSafe(king.y, king.x, gameState);
-    if (!moveIsSafe) return false;
-    moveIsSafe = king.isMoveSafe(king.y, king.x - 1, gameState);
-    if (!moveIsSafe) return false;
-    moveIsSafe = king.isMoveSafe(king.y, king.x - 2, gameState);
-    if (!moveIsSafe) return false;
-    // Moved pieces
-    gameState[y_end][x_end] = king;
-    if (y_end == 0) {
-      gameState[0][3] = rook;
-    } else {
-      gameState[7][3] = rook;
-    }
-    // Move images
-    kingLandingSpace.append(kingImg);
-    rookLandingSpace.append(rookImg);
-    // Delete old elements and update pieces + images
-    gameState[king.y][king.x] = null;
-    gameState[rook.y][rook.x] = null;
-    king.y = y_end;
-    king.x = x_end;
-    rook.y = y_end == 7 ? 7 : 0;
-    rook.x = 3;
-    king.hasMoved = true;
-    rook.hasMoved = true;
-    kingImg.dataset.coordinates = `${king.y}-${king.x}`;
-    rookImg.dataset.coordinates = `${rook.y}-${rook.x}`;
-    return true;
-  }
-
-  #executeRegularMove(
-    y_end,
-    x_end,
-    gameState,
-    space,
-    draggedPiece,
-    draggedImg
-  ) {
-    draggedPiece.executeMove(
-      {
-        y_end: y_end,
-        x_end: x_end,
-      },
-      gameState
-    );
-    // Remove img (if killed piece)
-    const img = document
-      .getElementById(`${y_end}-${x_end}`)
-      .querySelector("img");
-    if (img) img.remove();
-    // Put the dragged image to its resting location
-    space.appendChild(draggedImg);
-    draggedImg.dataset.coordinates = `${y_end}-${x_end}`;
-    return true;
-  }
-  // Move this to King?
-  #canMoveOutOfCheck() {
-    const king = this.#getKing(this.gameState);
-    const possibleMoves = {
-      UP: {
-        is_valid: king.isMoveValid(
-          king.y - 1,
-          king.x,
-          this.gameState,
-          this.activePlayer
-        ),
-        coords: {
-          y_start: king.y,
-          x_start: king.x,
-          y_end: king.y - 1,
-          x_end: king.x,
-        },
-      },
-      DOWN: {
-        is_valid: king.isMoveValid(
-          king.y + 1,
-          king.x,
-          this.gameState,
-          this.activePlayer
-        ),
-        coords: {
-          y_start: king.y,
-          x_start: king.x,
-          y_end: king.y + 1,
-          x_end: king.x,
-        },
-      },
-      LEFT: {
-        is_valid: king.isMoveValid(
-          king.y,
-          king.x - 1,
-          this.gameState,
-          this.activePlayer
-        ),
-        coords: {
-          y_start: king.y,
-          x_start: king.x,
-          y_end: king.y,
-          x_end: king.x - 1,
-        },
-      },
-      RIGHT: {
-        is_valid: king.isMoveValid(
-          king.y,
-          king.x + 1,
-          this.gameState,
-          this.activePlayer
-        ),
-        coords: {
-          y_start: king.y,
-          x_start: king.x,
-          y_end: king.y,
-          x_end: king.x + 1,
-        },
-      },
-      UP_RIGHT: {
-        is_valid: king.isMoveValid(
-          king.y - 1,
-          king.x + 1,
-          this.gameState,
-          this.activePlayer
-        ),
-        coords: {
-          y_start: king.y,
-          x_start: king.x,
-          y_end: king.y - 1,
-          x_end: king.x + 1,
-        },
-      },
-      UP_LEFT: {
-        is_valid: king.isMoveValid(
-          king.y - 1,
-          king.x - 1,
-          this.gameState,
-          this.activePlayer
-        ),
-        coords: {
-          y_start: king.y,
-          x_start: king.x,
-          y_end: king.y - 1,
-          x_end: king.x - 1,
-        },
-      },
-      DOWN_RIGHT: {
-        is_valid: king.isMoveValid(
-          king.y + 1,
-          king.x + 1,
-          this.gameState,
-          this.activePlayer
-        ),
-        coords: {
-          y_start: king.y,
-          x_start: king.x,
-          y_end: king.y + 1,
-          x_end: king.x + 1,
-        },
-      },
-      DOWN_LEFT: {
-        is_valid: king.isMoveValid(
-          king.y + 1,
-          king.x - 1,
-          this.gameState,
-          this.activePlayer
-        ),
-        coords: {
-          y_start: king.y,
-          x_start: king.x,
-          y_end: king.y + 1,
-          x_end: king.x - 1,
-        },
-      },
-    };
-    const validMoves = [];
-    for (const direction in possibleMoves) {
-      // We need to loop over all directions and perform those moves if valid
-      const { y_start, x_start, y_end, x_end } =
-        possibleMoves[direction]["coords"];
-      if (!possibleMoves[direction]["is_valid"]) continue;
-      const moveIsSafe = king.isMoveSafe(y_end, x_end, this.gameState);
-      validMoves.push(moveIsSafe);
-    }
-
-    for (const bool of validMoves) {
-      if (bool) return true;
-    }
-    return false;
-  }
-
-  #getKing(gameState) {
-    let king = null;
-
-    for (let i = 0; i < gameState.length; i++) {
-      for (let j = 0; j < gameState[0].length; j++) {
-        const piece = gameState[i][j];
-        if (
-          piece?.color == this.activePlayer["color"] &&
-          piece.type == "king"
-        ) {
-          king = piece;
-          break;
-        }
-      }
-    }
-    return king;
-  }
-  // Could pass king to this as well if we wanted to decouple
-  #canBlockOrKillThreat(threats) {
-    const king = this.#getKing(this.gameState);
-    const spacesSet = new Set();
-    for (const threat of threats) {
-      this.#getThreatPath(threat, king, spacesSet);
-    }
-    // We now have the set of spaces we must block.
-    const pieces = [];
-    for (const row of this.gameState) {
-      for (const piece of row) {
-        if (piece?.color == this.activePlayer["color"] && piece.type != "king")
-          pieces.push(piece);
-      }
-    }
-
-    const validMoves = [];
-    for (const space of spacesSet) {
-      let y = space[0];
-      let x = space[1];
-      for (const piece of pieces) {
-        const isValid = piece.isMoveValid(
-          y,
-          x,
-          this.gameState,
-          this.activePlayer
-        );
-        if (isValid) {
-          validMoves.push([piece, [y, x]]);
-        }
-      }
-    }
-
-    for (const [piece, [y, x]] of validMoves) {
-      const moveIsSafe = piece.isMoveSafe(y, x, this.gameState);
-      if (moveIsSafe) return true;
-    }
-    return false;
-  }
-  // Move this to King?
-  #getThreatPath(threat, king, spacesSet) {
-    let direction = null;
-
-    if (threat.y > king.y && threat.x < king.x) direction = "DOWN_LEFT";
-    else if (threat.y > king.y && threat.x > king.x) direction = "DOWN_RIGHT";
-    else if (threat.y < king.y && threat.x < king.x) direction = "UP_LEFT";
-    else if (threat.y < king.y && threat.x > king.x) direction = "UP_RIGHT";
-    else if (threat.y > king.y) direction = "UP";
-    else if (threat.y < king.y) direction = "DOWN";
-    else if (threat.x < king.x) direction = "LEFT";
-    else if (threat.x > king.x) direction = "RIGHT";
-
-    let y = king.y;
-    let x = king.x;
-
-    while (true) {
-      switch (direction) {
-        case "UP":
-          y = y - 1;
-          break;
-        case "DOWN":
-          y = y + 1;
-          break;
-        case "LEFT":
-          x = x - 1;
-          break;
-        case "RIGHT":
-          x = x + 1;
-          break;
-        case "DOWN_LEFT":
-          y = y + 1;
-          x = x - 1;
-          break;
-        case "DOWN_RIGHT":
-          y = y + 1;
-          x = x + 1;
-          break;
-        case "UP_LEFT":
-          y = y - 1;
-          x = x - 1;
-          break;
-        case "UP_RIGHT":
-          y = y - 1;
-          x = x + 1;
-          break;
-      }
-      spacesSet.add([y, x]);
-      if (y == threat.y && x == threat.x) break;
-    }
-  }
-  // Move this to King?
-  // To decouple this from Board, you could just pass in the king
-  // But you would also have to find all pieces and pass to this function as well...
-  getThreats(gameState) {
-    const enemyColor =
-      this.activePlayer["color"] == "white"
-        ? { color: "black" }
-        : { color: "white" };
-    const king = this.#getKing(gameState);
-
-    const directions = [
-      "UP",
-      "DOWN",
-      "LEFT",
-      "RIGHT",
-      "UP_RIGHT",
-      "UP_LEFT",
-      "DOWN_RIGHT",
-      "DOWN_LEFT",
-      "UP_TWO_LEFT_ONE",
-      "UP_ONE_LEFT_TWO",
-      "UP_TWO_RIGHT_ONE",
-      "UP_ONE_RIGHT_TWO",
-      "DOWN_TWO_RIGHT_ONE",
-      "DOWN_ONE_RIGHT_TWO",
-      "DOWN_TWO_LEFT_ONE",
-      "DOWN_ONE_LEFT_TWO",
-    ];
-
-    const threats = [];
-
-    for (const direction of directions) {
-      const foundPiece = this.#findPiece(king.y, king.x, direction, gameState);
-      if (foundPiece) {
-        const piece = foundPiece; // This assignement is useless I think
-        if (piece.color !== king.color) {
-          const isValid = piece.isMoveValid(
-            king.y,
-            king.x,
-            gameState,
-            enemyColor
-          );
-          if (isValid) threats.push(piece);
-        }
-      }
-    }
-    return threats;
-  }
-
   #passTurn() {
     const activePlayerDiv = document.getElementById("active-player-div");
     activePlayerDiv.innerText = "Active player: White";
@@ -711,7 +227,8 @@ export class Board {
     this.activePlayer["color"] == "white"
       ? (this.activePlayer["color"] = "black")
       : (this.activePlayer["color"] = "white");
-    const threats = this.getThreats(this.gameState);
+    const king = this.KING[this.activePlayer["color"]];
+    const threats = king.getThreats(this.gameState, this.activePlayer);
     const checkDiv = document.getElementById("check") ?? false;
     if (threats.length == 0) {
       checkDiv.innerText = "";
@@ -719,9 +236,16 @@ export class Board {
     }
     let canMoveOutOfCheck = null;
     let canBlockOrKillThreat = null;
-    canMoveOutOfCheck = this.#canMoveOutOfCheck();
+    canMoveOutOfCheck = king.canMoveOutOfCheck(
+      this.gameState,
+      this.activePlayer
+    );
     if (!canMoveOutOfCheck) {
-      canBlockOrKillThreat = this.#canBlockOrKillThreat(threats);
+      canBlockOrKillThreat = king.canBlockOrKillThreat(
+        threats,
+        this.gameState,
+        this.activePlayer
+      );
     }
     checkDiv.innerText = `${this.activePlayer["color"]} king is in check`;
     if (!canBlockOrKillThreat && !canMoveOutOfCheck) {

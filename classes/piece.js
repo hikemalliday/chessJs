@@ -171,10 +171,10 @@ export class Piece {
           : null
       )
     );
+    const king = this.board.getKing(deepCopy, this.board.activePlayer["color"]);
     const piece = deepCopy[this.y][this.x];
     piece.executeMove({ y_end: y, x_end: x }, deepCopy);
-    const threats = this.board.getThreats(deepCopy);
-
+    const threats = king.getThreats(deepCopy, this.board.activePlayer);
     return threats.length == 0;
   }
 }

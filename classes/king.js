@@ -11,9 +11,9 @@ export class King extends Piece {
     const landingSpace = gameState[y_end][x_end];
     // Check for castle
     if (this.hasMoved == false && x_abs == 2 && x_end > x_start)
-      return this.#isCastleRightValid(y_end, x_end, gameState);
+      return this.#isCastleRightValid(y_end, gameState);
     if (this.hasMoved == false && x_abs == 2 && x_end < x_start)
-      return this.#isCastleLeftValid(y_end, x_end, gameState);
+      return this.#isCastleLeftValid(y_end, gameState);
     if (y_abs > 1 || x_abs > 1) {
       return 0;
     }
@@ -26,7 +26,7 @@ export class King extends Piece {
     return 1;
   }
 
-  #isCastleRightValid(y_end, x_end, gameState) {
+  #isCastleRightValid(y_end, gameState) {
     const firstSpace = gameState[y_end][this.x + 1];
     const secondSpace = gameState[y_end][this.x + 2];
     if (firstSpace || secondSpace) return 0;
@@ -37,7 +37,7 @@ export class King extends Piece {
     return 3;
   }
 
-  #isCastleLeftValid(y_end, x_end, gameState) {
+  #isCastleLeftValid(y_end, gameState) {
     const firstSpace = gameState[y_end][this.x - 1];
     const secondSpace = gameState[y_end][this.x - 2];
     if (firstSpace || secondSpace) return 0;
@@ -176,26 +176,17 @@ export class King extends Piece {
       },
     };
     const validMoves = [];
+    // We need to loop over all directions and perform those moves if valid
     for (const direction in possibleMoves) {
-      // We need to loop over all directions and perform those moves if valid
       const { y_start, x_start, y_end, x_end } =
         possibleMoves[direction]["coords"];
-      if (direction == "UP") {
-        console.log("direction is UP, is_valid bool:");
-        console.log(possibleMoves[direction]["is_valid"]);
-      }
+
       if (!possibleMoves[direction]["is_valid"]) continue;
       const moveIsSafe = king.isMoveSafe(y_end, x_end, gameState);
       validMoves.push(moveIsSafe);
     }
 
-    for (const bool of validMoves) {
-      if (bool) {
-        console.log("YOU CAN INDEED MOVE OUT OF CHECK");
-        return true;
-      }
-    }
-    console.log("CANNOT MOVE OUT OF CHECK, RETURN FALSE");
+    for (const bool of validMoves) if (bool) return true;
     return false;
   }
   // Helper used by getThreats

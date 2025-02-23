@@ -5,11 +5,7 @@ import { Queen } from "./queen.js";
 import { King } from "./king.js";
 import { Knight } from "./knight.js";
 import { doubleCheck, castle } from "../alternate-board-states/board-states.js";
-import {
-  executeRegularMove,
-  executeCastleLeft,
-  executeCastleRight,
-} from "../helpers/movement.js";
+import { executeRegularMove, executeCastle } from "../helpers/movement.js";
 
 export class Board {
   constructor() {
@@ -20,8 +16,8 @@ export class Board {
     this.#addEventListeners();
     this.EXECUTE_MOVE = {
       1: executeRegularMove,
-      2: executeCastleLeft,
-      3: executeCastleRight,
+      2: executeCastle,
+      3: executeCastle,
     };
     this.KING = {
       black: this.getKing(this.gameState, "black"),
@@ -87,8 +83,8 @@ export class Board {
       const row = [];
       for (let x = 0; x < 8; x++) {
         //row.push(this.#getPiece(y, x));
-        row.push(doubleCheck(y, x, this));
-        //row.push(castle(y, x, this));
+        //row.push(doubleCheck(y, x, this));
+        row.push(castle(y, x, this));
       }
       gameState.push(row);
     }
@@ -191,6 +187,7 @@ export class Board {
         if (!draggedImg || !draggedPiece) return;
 
         [y_end, x_end] = space.id.split("-").map(Number);
+        // const 'isMoveValid' is an integer, which tells this.EXECUTE_MOVE which movement function to call
         const isMoveValid = draggedPiece.isMoveValid(
           y_end,
           x_end,
@@ -198,6 +195,7 @@ export class Board {
           this.activePlayer["color"]
         );
         if (!isMoveValid) return;
+        // Possible that this could just be moved into execute move functions
         const moveIsSafe = draggedPiece.isMoveSafe(
           y_end,
           x_end,
@@ -210,7 +208,8 @@ export class Board {
           this.gameState,
           space,
           draggedPiece,
-          draggedImg
+          draggedImg,
+          isMoveValid
         );
         if (moveWasSuccessful) this.#passTurn();
         else return;
@@ -234,6 +233,7 @@ export class Board {
       checkDiv.innerText = "";
       return;
     }
+    // If threats exist, determine checkmate
     let canMoveOutOfCheck = null;
     let canBlockOrKillThreat = null;
     canMoveOutOfCheck = king.canMoveOutOfCheck(

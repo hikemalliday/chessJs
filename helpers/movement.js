@@ -1,37 +1,49 @@
-export function executeCastleRight(
+import { CASTLE_LEFT } from "../constants.js";
+
+export function executeCastle(
   y_end,
   x_end,
   gameState,
   space,
   draggedPiece,
-  draggedImg
+  draggedImg,
+  direction
 ) {
+  let rook_x_start = null;
+  let rook_x_end = null;
+  let firstMoveOperator = null;
+  let secondMoveOperator = null;
+
+  if (direction == CASTLE_LEFT) {
+    rook_x_start = 0;
+    rook_x_end = 3;
+    firstMoveOperator = -1;
+    secondMoveOperator = -2;
+  } else {
+    rook_x_start = 7;
+    rook_x_end = 5;
+    firstMoveOperator = 1;
+    secondMoveOperator = 2;
+  }
+
   const king = draggedPiece;
   const kingImg = draggedImg;
-  let rook = y_end == 7 ? gameState[7][7] : gameState[0][7];
-  let rookImg =
-    y_end == 7
-      ? document.querySelector(`img[data-coordinates="${7}-${7}"]`)
-      : document.querySelector(`img[data-coordinates="${0}-${7}"]`);
-  const rookLandingSpace =
-    y_end == 7
-      ? document.getElementById(`${7}-${5}`)
-      : document.getElementById(`${0}-${5}`);
   const kingLandingSpace = document.getElementById(`${y_end}-${x_end}`);
-  // Check for threats before move and on first and second space
+  const rook = gameState[y_end][rook_x_start];
+  const rookImg = document.querySelector(
+    `img[data-coordinates="${y_end}-${rook_x_start}"]`
+  );
+  const rookLandingSpace = document.getElementById(`${y_end}-${rook_x_end}`);
+
   let moveIsSafe = king.isMoveSafe(king.y, king.x, gameState);
   if (!moveIsSafe) return false;
-  moveIsSafe = king.isMoveSafe(king.y, king.x + 1, gameState);
+  moveIsSafe = king.isMoveSafe(king.y, king.x + firstMoveOperator, gameState);
   if (!moveIsSafe) return false;
-  moveIsSafe = king.isMoveSafe(king.y, king.x + 2, gameState);
+  moveIsSafe = king.isMoveSafe(king.y, king.x + secondMoveOperator, gameState);
   if (!moveIsSafe) return false;
-  // Moved pieces
+  // Move pieces
   gameState[y_end][x_end] = king;
-  if (y_end == 0) {
-    gameState[0][5] = rook;
-  } else {
-    gameState[7][5] = rook;
-  }
+  gameState[y_end][rook_x_end] = rook;
   // Move images
   kingLandingSpace.append(kingImg);
   rookLandingSpace.append(rookImg);
@@ -40,67 +52,12 @@ export function executeCastleRight(
   gameState[rook.y][rook.x] = null;
   king.y = y_end;
   king.x = x_end;
-  rook.y = y_end == 7 ? 7 : 0;
-  rook.x = 5;
-  king.hasMoved = true;
-  rook.hasMoved = true;
-  kingImg.dataset.coordinates = `${king.y}-${king.x}`;
-  rookImg.dataset.coordinates = `${rook.y}-${rook.x}`;
-  return true;
-}
-
-export function executeCastleLeft(
-  y_end,
-  x_end,
-  gameState,
-  space,
-  draggedPiece,
-  draggedImg
-) {
-  // Rook landing space will be x = 3
-  const king = draggedPiece;
-  const kingImg = draggedImg;
-  let rook = y_end == 7 ? gameState[7][0] : gameState[0][0];
-  let rookImg =
-    y_end == 7
-      ? document.querySelector(`img[data-coordinates="${7}-${0}"]`)
-      : document.querySelector(`img[data-coordinates="${0}-${0}"]`);
-  const rookLandingSpace =
-    y_end == 7
-      ? document.getElementById(`${7}-${3}`)
-      : document.getElementById(`${0}-${3}`);
-  const kingLandingSpace = document.getElementById(`${y_end}-${x_end}`);
-  // Check for threats before move, and on first and second space
-
-  let moveIsSafe = king.isMoveSafe(king.y, king.x, gameState);
-  if (!moveIsSafe) return false;
-  moveIsSafe = king.isMoveSafe(king.y, king.x - 1, gameState);
-  if (!moveIsSafe) return false;
-  moveIsSafe = king.isMoveSafe(king.y, king.x - 2, gameState);
-  if (!moveIsSafe) return false;
-  // Moved pieces
-  gameState[y_end][x_end] = king;
-  if (y_end == 0) {
-    gameState[0][3] = rook;
-  } else {
-    gameState[7][3] = rook;
-  }
-  // Move images
-  kingLandingSpace.append(kingImg);
-  rookLandingSpace.append(rookImg);
-  // Delete old elements and update pieces + images
-  gameState[king.y][king.x] = null;
-  gameState[rook.y][rook.x] = null;
-  king.y = y_end;
-  king.x = x_end;
-  rook.y = y_end == 7 ? 7 : 0;
-  rook.x = 3;
-  king.hasMoved = true;
-  rook.hasMoved = true;
+  rook.y = y_end;
+  rook.x = rook_x_end;
   kingImg.dataset.coordinates = `${king.y}-${king.x}`;
   rookImg.dataset.coordinates = `${rook.y}-${rook.x}`;
   king.hasMoved = true;
-  rook.hasMove = true;
+  rook.hasMoved = true;
   return true;
 }
 
@@ -110,15 +67,10 @@ export function executeRegularMove(
   gameState,
   space,
   draggedPiece,
-  draggedImg
+  draggedImg,
+  direction
 ) {
-  draggedPiece.executeMove(
-    {
-      y_end: y_end,
-      x_end: x_end,
-    },
-    gameState
-  );
+  draggedPiece.executeMove(y_end, x_end, gameState);
   // Remove img (if killed piece)
   const img = document.getElementById(`${y_end}-${x_end}`).querySelector("img");
   if (img) img.remove();

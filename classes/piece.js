@@ -124,8 +124,7 @@ export class Piece {
     return killedPiece;
   }
   // refactor to just pass y, x
-  executeMove(coords, gameState) {
-    const { y_end, x_end } = coords;
+  executeMove(y_end, x_end, gameState) {
     gameState[this.y][this.x] = null;
     this.y = y_end;
     this.x = x_end;
@@ -155,7 +154,7 @@ export class Piece {
     );
     const king = this.board.getKing(deepCopy, this.board.activePlayer["color"]);
     const piece = deepCopy[this.y][this.x];
-    piece.executeMove({ y_end: y, x_end: x }, deepCopy);
+    piece.executeMove(y, x, deepCopy);
     const threats = king.getThreats(deepCopy, this.board.activePlayer["color"]);
     return threats.length == 0;
   }

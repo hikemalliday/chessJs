@@ -99,11 +99,11 @@ export class King extends Piece {
     }
   }
 
-  canMoveOutOfCheck(gameState, activePlayer) {
+  canMoveOutOfCheck(gameState, color) {
     const king = this;
     const possibleMoves = {
       UP: {
-        is_valid: king.isMoveValid(king.y - 1, king.x, gameState, activePlayer),
+        is_valid: king.isMoveValid(king.y - 1, king.x, gameState, color),
         coords: {
           y_start: king.y,
           x_start: king.x,
@@ -112,7 +112,7 @@ export class King extends Piece {
         },
       },
       DOWN: {
-        is_valid: king.isMoveValid(king.y + 1, king.x, gameState, activePlayer),
+        is_valid: king.isMoveValid(king.y + 1, king.x, gameState, color),
         coords: {
           y_start: king.y,
           x_start: king.x,
@@ -121,7 +121,7 @@ export class King extends Piece {
         },
       },
       LEFT: {
-        is_valid: king.isMoveValid(king.y, king.x - 1, gameState, activePlayer),
+        is_valid: king.isMoveValid(king.y, king.x - 1, gameState, color),
         coords: {
           y_start: king.y,
           x_start: king.x,
@@ -130,7 +130,7 @@ export class King extends Piece {
         },
       },
       RIGHT: {
-        is_valid: king.isMoveValid(king.y, king.x + 1, gameState, activePlayer),
+        is_valid: king.isMoveValid(king.y, king.x + 1, gameState, color),
         coords: {
           y_start: king.y,
           x_start: king.x,
@@ -139,12 +139,7 @@ export class King extends Piece {
         },
       },
       UP_RIGHT: {
-        is_valid: king.isMoveValid(
-          king.y - 1,
-          king.x + 1,
-          gameState,
-          activePlayer
-        ),
+        is_valid: king.isMoveValid(king.y - 1, king.x + 1, gameState, color),
         coords: {
           y_start: king.y,
           x_start: king.x,
@@ -153,12 +148,7 @@ export class King extends Piece {
         },
       },
       UP_LEFT: {
-        is_valid: king.isMoveValid(
-          king.y - 1,
-          king.x - 1,
-          gameState,
-          activePlayer
-        ),
+        is_valid: king.isMoveValid(king.y - 1, king.x - 1, gameState, color),
         coords: {
           y_start: king.y,
           x_start: king.x,
@@ -167,12 +157,7 @@ export class King extends Piece {
         },
       },
       DOWN_RIGHT: {
-        is_valid: king.isMoveValid(
-          king.y + 1,
-          king.x + 1,
-          gameState,
-          activePlayer
-        ),
+        is_valid: king.isMoveValid(king.y + 1, king.x + 1, gameState, color),
         coords: {
           y_start: king.y,
           x_start: king.x,
@@ -181,12 +166,7 @@ export class King extends Piece {
         },
       },
       DOWN_LEFT: {
-        is_valid: king.isMoveValid(
-          king.y + 1,
-          king.x - 1,
-          gameState,
-          activePlayer
-        ),
+        is_valid: king.isMoveValid(king.y + 1, king.x - 1, gameState, color),
         coords: {
           y_start: king.y,
           x_start: king.x,
@@ -314,11 +294,8 @@ export class King extends Piece {
     return null;
   }
 
-  getThreats(gameState, activePlayer) {
-    const enemyColor =
-      activePlayer["color"] == "white"
-        ? { color: "black" }
-        : { color: "white" };
+  getThreats(gameState, color) {
+    const enemyColor = color == "white" ? "black" : "white";
 
     const directions = [
       "UP",
@@ -360,7 +337,7 @@ export class King extends Piece {
     return threats;
   }
 
-  canBlockOrKillThreat(threats, gameState, activePlayer) {
+  canBlockOrKillThreat(threats, gameState, color) {
     const spacesSet = new Set();
     for (const threat of threats) {
       this.getThreatPath(threat, spacesSet);
@@ -369,8 +346,7 @@ export class King extends Piece {
     const pieces = [];
     for (const row of gameState) {
       for (const piece of row) {
-        if (piece?.color == activePlayer["color"] && piece.type != "king")
-          pieces.push(piece);
+        if (piece?.color == color && piece?.type != "king") pieces.push(piece);
       }
     }
 
@@ -379,12 +355,7 @@ export class King extends Piece {
       let y = space[0];
       let x = space[1];
       for (const piece of pieces) {
-        const isValid = piece.isMoveValid(
-          y,
-          x,
-          this.gameState,
-          this.activePlayer
-        );
+        const isValid = piece.isMoveValid(y, x, gameState, color);
         if (isValid) {
           validMoves.push([piece, [y, x]]);
         }

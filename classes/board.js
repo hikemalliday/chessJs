@@ -86,8 +86,8 @@ export class Board {
     for (let y = 0; y < 8; y++) {
       const row = [];
       for (let x = 0; x < 8; x++) {
-        row.push(this.#getPiece(y, x));
-        //row.push(doubleCheck(y, x, this));
+        //row.push(this.#getPiece(y, x));
+        row.push(doubleCheck(y, x, this));
         //row.push(castle(y, x, this));
       }
       gameState.push(row);
@@ -195,7 +195,7 @@ export class Board {
           y_end,
           x_end,
           this.gameState,
-          this.activePlayer
+          this.activePlayer["color"]
         );
         if (!isMoveValid) return;
         const moveIsSafe = draggedPiece.isMoveSafe(
@@ -228,7 +228,7 @@ export class Board {
       ? (this.activePlayer["color"] = "black")
       : (this.activePlayer["color"] = "white");
     const king = this.KING[this.activePlayer["color"]];
-    const threats = king.getThreats(this.gameState, this.activePlayer);
+    const threats = king.getThreats(this.gameState, this.activePlayer["color"]);
     const checkDiv = document.getElementById("check") ?? false;
     if (threats.length == 0) {
       checkDiv.innerText = "";
@@ -238,13 +238,13 @@ export class Board {
     let canBlockOrKillThreat = null;
     canMoveOutOfCheck = king.canMoveOutOfCheck(
       this.gameState,
-      this.activePlayer
+      this.activePlayer["color"]
     );
     if (!canMoveOutOfCheck) {
       canBlockOrKillThreat = king.canBlockOrKillThreat(
         threats,
         this.gameState,
-        this.activePlayer
+        this.activePlayer["color"]
       );
     }
     checkDiv.innerText = `${this.activePlayer["color"]} king is in check`;

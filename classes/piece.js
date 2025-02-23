@@ -8,8 +8,8 @@ export class Piece {
     this.x = x;
   }
 
-  isMoveValid(y_end, x_end, gameState = {}, activePlayer = {}) {
-    if (activePlayer["color"] !== this.color) return false;
+  isMoveValid(y_end, x_end, gameState = {}, color) {
+    if (color !== this.color) return false;
 
     const coords = {
       y_start: this.y,
@@ -36,6 +36,7 @@ export class Piece {
 
   isMoveValidRookHelper(direction, coords, gameState) {
     const { y_start, x_start, y_end, x_end, y_abs, x_abs } = coords;
+    console.log(`y_end: ${y_end}, x_end: ${x_end}`);
     const landingSpace = gameState[y_end][x_end];
     let y = Number(y_start);
     let x = Number(x_start);
@@ -137,23 +138,6 @@ export class Piece {
       movedPiece: this,
     };
   }
-  revertMove(y_start, x_start, movedPiece, killedPiece, gameState) {
-    if (killedPiece) {
-      killedPiece.y = movedPiece.y;
-      killedPiece.x = movedPiece.x;
-    }
-    // ai suggestion
-    //   if (killedPiece) {
-    //     gameState[killedPiece.y][killedPiece.x] = killedPiece;  // Restore killed piece
-    // }
-
-    gameState[movedPiece.y][movedPiece.x] = killedPiece;
-
-    movedPiece.y = y_start;
-    movedPiece.x = x_start;
-
-    gameState[y_start][x_start] = movedPiece;
-  }
 
   isMoveSafe(y, x, gameState) {
     const deepCopy = gameState.map((row) =>
@@ -172,7 +156,7 @@ export class Piece {
     const king = this.board.getKing(deepCopy, this.board.activePlayer["color"]);
     const piece = deepCopy[this.y][this.x];
     piece.executeMove({ y_end: y, x_end: x }, deepCopy);
-    const threats = king.getThreats(deepCopy, this.board.activePlayer);
+    const threats = king.getThreats(deepCopy, this.board.activePlayer["color"]);
     return threats.length == 0;
   }
 }

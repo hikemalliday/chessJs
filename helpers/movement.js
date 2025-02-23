@@ -58,7 +58,6 @@ export function executeCastleLeft(
   draggedImg
 ) {
   // Rook landing space will be x = 3
-  console.log("executeCastleLeftCall");
   const king = draggedPiece;
   const kingImg = draggedImg;
   let rook = y_end == 7 ? gameState[7][0] : gameState[0][0];

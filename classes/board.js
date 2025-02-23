@@ -29,6 +29,20 @@ export class Board {
     };
   }
 
+  getKing(gameState, color) {
+    let king = null;
+    for (let i = 0; i < gameState.length; i++) {
+      for (let j = 0; j < gameState[0].length; j++) {
+        const piece = gameState[i][j];
+        if (piece?.color == color && piece.type == "king") {
+          king = piece;
+          break;
+        }
+      }
+    }
+    return king;
+  }
+
   #getPiece(y, x) {
     const pieceLookup = {
       "0-0": new Rook("rook", "black", this, y, x),
@@ -111,7 +125,7 @@ export class Board {
       boardContainer.appendChild(row);
     }
   }
-  // Render pieces on board according to 'gameState'
+  // Render images on board according to 'gameState'
   #generatePieceImages(gameState) {
     for (let y = 0; y < gameState.length; y++) {
       for (let x = 0; x < gameState[0].length; x++) {
@@ -136,20 +150,6 @@ export class Board {
     }
   }
 
-  getKing(gameState, color) {
-    let king = null;
-    for (let i = 0; i < gameState.length; i++) {
-      for (let j = 0; j < gameState[0].length; j++) {
-        const piece = gameState[i][j];
-        if (piece?.color == color && piece.type == "king") {
-          king = piece;
-          break;
-        }
-      }
-    }
-    return king;
-  }
-  // Possibly refactor this, bad code smell
   #addEventListeners() {
     let draggedImg = null;
     let draggedPiece = null;

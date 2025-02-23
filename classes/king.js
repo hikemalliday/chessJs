@@ -21,10 +21,8 @@ export class King extends Piece {
       return 0;
     }
     if (!landingSpace) {
-      this.hasMoved = true;
       return 1;
     }
-    this.hasMoved = true;
     return 1;
   }
 

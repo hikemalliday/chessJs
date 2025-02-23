@@ -100,6 +100,8 @@ export function executeCastleLeft(
   rook.hasMoved = true;
   kingImg.dataset.coordinates = `${king.y}-${king.x}`;
   rookImg.dataset.coordinates = `${rook.y}-${rook.x}`;
+  king.hasMoved = true;
+  rook.hasMove = true;
   return true;
 }
 

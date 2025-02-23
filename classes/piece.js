@@ -57,19 +57,16 @@ export class Piece {
       let nextSpace = gameState[y][x];
       if (nextSpace) {
         if (x == x_end && y == y_end && nextSpace.color !== this.color) {
-          this.hasMoved = true;
           return 1;
         }
         return 0;
       }
     }
     if (!landingSpace) {
-      this.hasMoved = 1;
       return 1;
     }
     if (landingSpace && landingSpace.color === this.color) return 0;
     if (landingSpace && landingSpace.color !== this.color) {
-      this.hasMoved = 1;
       return 1;
     }
   }
@@ -134,6 +131,7 @@ export class Piece {
     const killedPiece = this.killPiece(y_end, x_end, gameState);
     // Move piece
     gameState[y_end][x_end] = this;
+    this.hasMoved = true;
     return {
       killedPiece: killedPiece,
       movedPiece: this,

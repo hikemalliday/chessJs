@@ -30,13 +30,11 @@ export class Piece {
       coords["y_end"] > 7
     )
       return false;
-    // Defined in child
     return this.MOVE_LOOKUP(coords, gameState);
   }
 
   isMoveValidRookHelper(direction, coords, gameState) {
     const { y_start, x_start, y_end, x_end, y_abs, x_abs } = coords;
-    console.log(`y_end: ${y_end}, x_end: ${x_end}`);
     const landingSpace = gameState[y_end][x_end];
     let y = Number(y_start);
     let x = Number(x_start);

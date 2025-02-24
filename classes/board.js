@@ -4,8 +4,13 @@ import { Bishop } from "./bishop.js";
 import { Queen } from "./queen.js";
 import { King } from "./king.js";
 import { Knight } from "./knight.js";
-import { doubleCheck, castle } from "../alternate-board-states/board-states.js";
+import {
+  doubleCheck,
+  castle,
+  pawnConversion,
+} from "../alternate-board-states/board-states.js";
 import { executeRegularMove, executeCastle } from "../helpers/movement.js";
+import { pieceChoices } from "../constants.js";
 
 export class Board {
   constructor() {
@@ -13,7 +18,6 @@ export class Board {
     this.#generateBoard();
     this.activePlayer = { color: "white" }; // switch back to white after testing double checl
     this.#generatePieceImages(this.gameState);
-    this.#addEventListeners();
     this.EXECUTE_MOVE = {
       1: executeRegularMove,
       2: executeCastle,
@@ -23,6 +27,23 @@ export class Board {
       black: this.getKing(this.gameState, "black"),
       white: this.getKing(this.gameState, "white"),
     };
+    // Event listener vars
+    this.draggedImg = null;
+    this.draggedPiece = null;
+    this.y_start = null;
+    this.x_start = null;
+    this.y_end = null;
+    this.x_end = null;
+    // Add event listeners
+    {
+      document.querySelectorAll("img").forEach((img) => {
+        this.#addImgEventListeners(img);
+      });
+
+      document.querySelectorAll(".space").forEach((space) => {
+        this.#addSpaceEventListeners(space);
+      });
+    }
   }
 
   getKing(gameState, color) {
@@ -84,7 +105,8 @@ export class Board {
       for (let x = 0; x < 8; x++) {
         //row.push(this.#getPiece(y, x));
         //row.push(doubleCheck(y, x, this));
-        row.push(castle(y, x, this));
+        //row.push(castle(y, x, this));
+        row.push(pawnConversion(y, x, this));
       }
       gameState.push(row);
     }
@@ -146,75 +168,147 @@ export class Board {
     }
   }
 
-  #addEventListeners() {
-    let draggedImg = null;
-    let draggedPiece = null;
-    let y_start = null;
-    let x_start = null;
-    let y_end = null;
-    let x_end = null;
-
-    document.querySelectorAll("img").forEach((piece) => {
-      piece.addEventListener("dragstart", (e) => {
-        draggedImg = e.target;
-        if (!draggedImg) return;
-        [y_start, x_start] = draggedImg.dataset.coordinates
-          .split("-")
-          .map(Number);
-        draggedPiece = this.gameState[y_start][x_start];
-        if (!draggedPiece) return;
-        setTimeout(() => {
-          e.target.style.display = "none"; // Hide the piece while dragging
-        }, 0);
-      });
-
-      piece.addEventListener("dragend", (e) => {
-        setTimeout(() => {
-          e.target.style.display = "flex";
-          draggedImg = null;
-          draggedPiece = null;
-        }, 0);
-      });
+  #addImgEventListeners(img) {
+    img.addEventListener("dragstart", (e) => {
+      this.draggedImg = e.target;
+      if (!this.draggedImg) return;
+      [this.y_start, this.x_start] = this.draggedImg.dataset.coordinates
+        .split("-")
+        .map(Number);
+      this.draggedPiece = this.gameState[this.y_start][this.x_start];
+      if (!this.draggedPiece) return;
+      setTimeout(() => {
+        e.target.style.display = "none"; // Hide the piece while dragging
+      }, 0);
     });
 
-    document.querySelectorAll(".space").forEach((space) => {
-      space.addEventListener("dragover", (e) => {
-        e.preventDefault(); // Allow drop
-      });
-
-      space.addEventListener("drop", (e) => {
-        e.preventDefault();
-        if (!draggedImg || !draggedPiece) return;
-
-        [y_end, x_end] = space.id.split("-").map(Number);
-        // const 'isMoveValid' is an integer, which tells this.EXECUTE_MOVE which movement function to call
-        const isMoveValid = draggedPiece.isMoveValid(
-          y_end,
-          x_end,
-          this.gameState,
-          this.activePlayer["color"]
-        );
-        if (!isMoveValid) return;
-        // Possible that this could just be moved into execute move functions
-        const moveIsSafe = draggedPiece.isMoveSafe(
-          y_end,
-          x_end,
-          this.gameState
-        );
-        if (!moveIsSafe) return;
-        const moveWasSuccessful = this.EXECUTE_MOVE[isMoveValid](
-          y_end,
-          x_end,
-          this.gameState,
-          space,
-          draggedPiece,
-          draggedImg,
-          isMoveValid
-        );
-        if (moveWasSuccessful) this.#passTurn();
-        else return;
-      });
+    img.addEventListener("dragend", (e) => {
+      setTimeout(() => {
+        e.target.style.display = "flex";
+        this.draggedImg = null;
+        this.draggedPiece = null;
+      }, 0);
     });
+  }
+
+  #addSpaceEventListeners(space) {
+    space.addEventListener("dragover", (e) => {
+      e.preventDefault(); // Allow drop
+    });
+
+    space.addEventListener("drop", (e) => {
+      e.preventDefault();
+      if (!this.draggedImg || !this.draggedPiece) return;
+
+      [this.y_end, this.x_end] = space.id.split("-").map(Number);
+      // const 'isMoveValid' is an integer, which tells this.EXECUTE_MOVE which movement function to call
+      const isMoveValid = this.draggedPiece.isMoveValid(
+        this.y_end,
+        this.x_end,
+        this.gameState,
+        this.activePlayer["color"]
+      );
+      if (!isMoveValid) return;
+      // Possible that this could just be moved into execute move functions
+      const moveIsSafe = this.draggedPiece.isMoveSafe(
+        this.y_end,
+        this.x_end,
+        this.gameState
+      );
+      if (!moveIsSafe) return;
+      const moveWasSuccessful = this.EXECUTE_MOVE[isMoveValid](
+        this.y_end,
+        this.x_end,
+        this.gameState,
+        space,
+        this.draggedPiece,
+        this.draggedImg,
+        isMoveValid
+      );
+      if (!moveWasSuccessful) return;
+      //this.#passTurn();
+      const pawnToConvert = this.#checkPawnConversion();
+      if (pawnToConvert) return this.#pawnConversion(pawnToConvert);
+      return this.#passTurn();
+    });
+  }
+
+  #checkPawnConversion() {
+    const topRow = this.gameState[0];
+    const bottomRow = this.gameState[7];
+
+    for (const piece of topRow) {
+      if (piece?.type == "pawn") return piece;
+    }
+
+    for (const piece of bottomRow) {
+      if (piece?.type == "pawn") return piece;
+    }
+    return null;
+  }
+
+  #handleConvertPawn(pawn, pieceType) {
+    const conversionTable = {
+      rook: Rook,
+      knight: Knight,
+      bishop: Bishop,
+      queen: Queen,
+    };
+    const newPiece = new conversionTable[pieceType](
+      pieceType,
+      pawn.color,
+      this,
+      pawn.y,
+      pawn.x
+    );
+    this.gameState[newPiece.y][newPiece.x] = newPiece;
+
+    const space = document.getElementById(`${newPiece.y}-${newPiece.x}`);
+    // Delete old image
+    const img = space.querySelector("img");
+    if (img) img.remove();
+    // Define new image and append to DOM
+    const newImg = document.createElement("img");
+    newImg.src = `./pieces/${newPiece.type}-${newPiece.color}.svg`;
+    newImg.width = 50;
+    newImg.height = 50;
+    newImg.dataset.coordinates = `${newPiece.y}-${newPiece.x}`;
+    space.appendChild(newImg);
+    // Add event listners
+    this.#addImgEventListeners(newImg);
+    // Clear piece selection interface
+    const conversionInterfaceDiv = document.getElementById(
+      "conversion-interface"
+    );
+    conversionInterfaceDiv.replaceChildren();
+    this.#passTurn();
+  }
+
+  #pawnConversion(pawn) {
+    const conversionInterfaceDiv = document.getElementById(
+      "conversion-interface"
+    );
+
+    const selectText = document.createElement("div");
+    selectText.innerText = "Select a piece:";
+    const select = document.createElement("select");
+    select.id = "piece-choices";
+    const button = document.createElement("button");
+    button.textContent = "Select";
+    button.addEventListener("click", () =>
+      this.#handleConvertPawn(pawn, select.value)
+    );
+
+    pieceChoices.forEach((piece, i) => {
+      const option = document.createElement("option");
+      option.value = i === 0 ? "" : piece;
+      option.textContent = piece;
+      if (i == 0) option.disabled = true;
+      select.appendChild(option);
+    });
+    conversionInterfaceDiv.append(selectText);
+    conversionInterfaceDiv.append(select);
+    conversionInterfaceDiv.append(button);
   }
 
   #passTurn() {

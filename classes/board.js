@@ -103,10 +103,10 @@ export class Board {
     for (let y = 0; y < 8; y++) {
       const row = [];
       for (let x = 0; x < 8; x++) {
-        //row.push(this.#getPiece(y, x));
+        row.push(this.#getPiece(y, x));
         //row.push(doubleCheck(y, x, this));
         //row.push(castle(y, x, this));
-        row.push(pawnConversion(y, x, this));
+        //row.push(pawnConversion(y, x, this));
       }
       gameState.push(row);
     }

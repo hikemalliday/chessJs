@@ -87,6 +87,8 @@ export function executeRegularMove(
   direction,
   board
 ) {
+  const moveIsSafe = draggedPiece.isMoveSafe(y_end, x_end, gameState);
+  if (!moveIsSafe) return false;
   setLastMove(
     draggedPiece,
     {
@@ -97,6 +99,7 @@ export function executeRegularMove(
     },
     board
   );
+
   draggedPiece.executeMove(y_end, x_end, gameState);
   // Remove img (if killed piece)
   const img = document.getElementById(`${y_end}-${x_end}`).querySelector("img");
@@ -104,6 +107,72 @@ export function executeRegularMove(
   // Put the dragged image to its resting location
   space.appendChild(draggedImg);
   draggedImg.dataset.coordinates = `${y_end}-${x_end}`;
+  return true;
+}
+
+export function executeEnPassant(
+  y_end,
+  x_end,
+  gameState,
+  space,
+  draggedPiece,
+  draggedImg,
+  direction,
+  board
+) {
+  console.log("executeEnPassant call start");
+  function isMoveSafeEnPassant(y_end, x_end, gameState, draggedPiece, board) {
+    const deepCopy = gameState.map((row) =>
+      row.map((space) =>
+        space
+          ? new space.constructor(
+              space.type,
+              space.color,
+              space.board,
+              space.y,
+              space.x
+            )
+          : null
+      )
+    );
+    const king = board.getKing(deepCopy, board.activePlayer["color"]);
+    const pawn = deepCopy[draggedPiece.y][draggedPiece.x];
+    // Kill piece
+    deepCopy[pawn.y][x_end] = null;
+    // Move pawn
+    deepCopy[pawn.y][pawn.x] = null;
+    deepCopy[y_end][x_end] = pawn;
+    // Check threats
+    const threats = king.getThreats(deepCopy, board.activePlayer["color"]);
+    return threats.length == 0;
+  }
+
+  const moveIsSafe = isMoveSafeEnPassant(
+    y_end,
+    x_end,
+    gameState,
+    draggedPiece,
+    board
+  );
+
+  if (!moveIsSafe) return false;
+  // Kill piece
+  gameState[draggedPiece.y][x_end] = null;
+  // Kill img
+  const img = document
+    .getElementById(`${draggedPiece.y}-${x_end}`)
+    .querySelector("img");
+  if (img) img.remove();
+  // Put the dragged pawn image to its resting location
+  space.appendChild(draggedImg);
+  draggedImg.dataset.coordinates = `${y_end}-${x_end}`;
+  // Move piece
+  gameState[draggedPiece.y][draggedPiece.x] = null;
+  draggedPiece.y = y_end;
+  draggedPiece.x = x_end;
+  gameState[y_end][x_end] = draggedPiece;
+  draggedPiece.hasMoved = true;
+  console.log("en passant complete, returning true now");
   return true;
 }
 
@@ -116,4 +185,5 @@ function setLastMove(piece, coords, board) {
     y_end: y_end,
     x_end: x_end,
   });
+  if (board.lastMove.length > 2) board.lastMove = board.lastMove.slice(-2);
 }

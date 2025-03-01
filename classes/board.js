@@ -9,7 +9,11 @@ import {
   castle,
   pawnConversion,
 } from "../alternate-board-states/board-states.js";
-import { executeRegularMove, executeCastle } from "../helpers/movement.js";
+import {
+  executeRegularMove,
+  executeCastle,
+  executeEnPassant,
+} from "../helpers/movement.js";
 import { pieceChoices } from "../constants.js";
 
 export class Board {
@@ -22,6 +26,7 @@ export class Board {
       1: executeRegularMove,
       2: executeCastle,
       3: executeCastle,
+      4: executeEnPassant,
     };
     this.KING = {
       black: this.getKing(this.gameState, "black"),
@@ -210,13 +215,7 @@ export class Board {
         this.activePlayer["color"]
       );
       if (!isMoveValid) return;
-      // Possible that this could just be moved into execute move functions
-      const moveIsSafe = this.draggedPiece.isMoveSafe(
-        this.y_end,
-        this.x_end,
-        this.gameState
-      );
-      if (!moveIsSafe) return;
+      console.log(`isMoveValid returned in: ${isMoveValid}`);
       const moveWasSuccessful = this.EXECUTE_MOVE[isMoveValid](
         this.y_end,
         this.x_end,

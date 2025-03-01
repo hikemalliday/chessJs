@@ -44,6 +44,7 @@ export class Board {
         this.#addSpaceEventListeners(space);
       });
     }
+    this.lastMove = [];
   }
 
   getKing(gameState, color) {
@@ -223,10 +224,11 @@ export class Board {
         space,
         this.draggedPiece,
         this.draggedImg,
-        isMoveValid
+        isMoveValid,
+        this
       );
       if (!moveWasSuccessful) return;
-      //this.#passTurn();
+      // this.#passTurn();
       const pawnToConvert = this.#checkPawnConversion();
       if (pawnToConvert) return this.#pawnConversion(pawnToConvert);
       return this.#passTurn();

@@ -7,7 +7,8 @@ export function executeCastle(
   space,
   draggedPiece,
   draggedImg,
-  direction
+  direction,
+  board
 ) {
   let rook_x_start = null;
   let rook_x_end = null;
@@ -41,6 +42,21 @@ export function executeCastle(
   if (!moveIsSafe) return false;
   moveIsSafe = king.isMoveSafe(king.y, king.x + secondMoveOperator, gameState);
   if (!moveIsSafe) return false;
+  setLastMove(
+    king,
+    { y_start: king.y, x_start: king.x, y_end: y_end, x_end: x_end },
+    board
+  );
+  setLastMove(
+    rook,
+    {
+      y_start: rook.y,
+      x_start: rook.x,
+      y_end: y_end,
+      x_end: rook_x_end,
+    },
+    board
+  );
   // Move pieces
   gameState[y_end][x_end] = king;
   gameState[y_end][rook_x_end] = rook;
@@ -68,8 +84,19 @@ export function executeRegularMove(
   space,
   draggedPiece,
   draggedImg,
-  direction
+  direction,
+  board
 ) {
+  setLastMove(
+    draggedPiece,
+    {
+      y_start: draggedPiece.y,
+      x_start: draggedPiece.x,
+      y_end: y_end,
+      x_end: x_end,
+    },
+    board
+  );
   draggedPiece.executeMove(y_end, x_end, gameState);
   // Remove img (if killed piece)
   const img = document.getElementById(`${y_end}-${x_end}`).querySelector("img");
@@ -78,4 +105,15 @@ export function executeRegularMove(
   space.appendChild(draggedImg);
   draggedImg.dataset.coordinates = `${y_end}-${x_end}`;
   return true;
+}
+
+function setLastMove(piece, coords, board) {
+  const { y_start, x_start, y_end, x_end } = coords;
+  board.lastMove.push({
+    piece: piece,
+    y_start: y_start,
+    x_start: x_start,
+    y_end: y_end,
+    x_end: x_end,
+  });
 }

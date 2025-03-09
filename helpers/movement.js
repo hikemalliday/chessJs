@@ -120,7 +120,6 @@ export function executeEnPassant(
   direction,
   board
 ) {
-  console.log("executeEnPassant call start");
   function isMoveSafeEnPassant(y_end, x_end, gameState, draggedPiece, board) {
     const deepCopy = gameState.map((row) =>
       row.map((space) =>

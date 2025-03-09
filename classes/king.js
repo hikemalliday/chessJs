@@ -49,8 +49,11 @@ export class King extends Piece {
   }
 
   getThreatPath(threat, spacesSet) {
+    if (threat.type == "knight") {
+      spacesSet.add([threat.y, threat.x]);
+      return;
+    }
     let direction = null;
-
     if (threat.y > this.y && threat.x < this.x) direction = "DOWN_LEFT";
     else if (threat.y > this.y && threat.x > this.x) direction = "DOWN_RIGHT";
     else if (threat.y < this.y && threat.x < this.x) direction = "UP_LEFT";

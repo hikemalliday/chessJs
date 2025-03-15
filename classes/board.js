@@ -15,13 +15,14 @@ import {
   executeEnPassant,
 } from "../helpers/movement.js";
 import { pieceChoices } from "../constants.js";
+import { deleteImg, generateImg, killPiece } from "../helpers/misc.js";
 
 export class Board {
   constructor() {
     this.gameState = this.#setStartingGameState();
     this.#generateBoard();
     this.activePlayer = { color: "white" }; // switch back to white after testing double checl
-    this.#generatePieceImages(this.gameState);
+    this.#generateStartingImages(this.gameState);
     this.EXECUTE_MOVE = {
       1: executeRegularMove,
       2: executeCastle,
@@ -66,7 +67,7 @@ export class Board {
     return king;
   }
 
-  #getPiece(y, x) {
+  #getStartingPiece(y, x) {
     const pieceLookup = {
       "0-0": new Rook("rook", "black", this, y, x),
       "0-1": new Knight("knight", "black", this, y, x),
@@ -103,13 +104,106 @@ export class Board {
     };
     return pieceLookup[`${y}-${x}`];
   }
+  // Refactor the duplicated kill logic
+  #syncBoardState(gameState, newGameState) {
+    for (let y = 0; y < newGameState.length; y++) {
+      for (let x = 0; x < newGameState[0].length; x++) {
+        const oldPiece = gameState[y][x];
+        const newPieceObj = newGameState[y][x];
+        if (!newPieceObj) {
+          killPiece(y, x, gameState);
+          deleteImg(y, x, gameState);
+          continue;
+        }
+        if (
+          oldPiece?.color == newPieceObj.color &&
+          oldPiece?.type == newPieceObj.type
+        )
+          continue;
+        killPiece(y, x, gameState);
+        deleteImg(y, x, gameState);
+        const newPiece = this.#createNewPiece(newPieceObj);
+        generateImg(y, x, newPiece);
+      }
+    }
+  }
+
+  #syncBoardStateQAButton() {
+    const newGameState = [
+      [
+        { type: "rook", color: "black" },
+        { type: "knight", color: "black" },
+        { type: "bishop", color: "black" },
+        { type: "queen", color: "black" },
+        { type: "king", color: "black" },
+        { type: "bishop", color: "black" },
+        { type: "knight", color: "black" },
+        { type: "rook", color: "black" },
+      ],
+      [
+        { type: "pawn", color: "black" },
+        { type: "pawn", color: "black" },
+        null,
+        { type: "pawn", color: "black" },
+        { type: "pawn", color: "black" },
+        { type: "pawn", color: "black" },
+        { type: "pawn", color: "black" },
+        { type: "pawn", color: "black" },
+      ],
+      [null, null, null, null, null, null, null, null],
+      [null, null, null, null, null, null, null, null],
+      [null, null, null, null, null, null, null, null],
+      [null, null, null, null, null, null, null, null],
+      [
+        { type: "pawn", color: "white" },
+        { type: "pawn", color: "white" },
+        { type: "pawn", color: "white" },
+        { type: "pawn", color: "white" },
+        { type: "pawn", color: "white" },
+        { type: "pawn", color: "white" },
+        { type: "pawn", color: "white" },
+        { type: "pawn", color: "white" },
+      ],
+      [
+        { type: "rook", color: "white" },
+        { type: "knight", color: "white" },
+        { type: "bishop", color: "white" },
+        { type: "queen", color: "white" },
+        { type: "king", color: "white" },
+        { type: "bishop", color: "white" },
+        { type: "knight", color: "white" },
+        { type: "rook", color: "white" },
+      ],
+    ];
+    const qaDiv = document.getElementById("qa-sync-board-state");
+    const button = document.createElement("button");
+    button.textContent = "sync board state";
+    button.addEventListener("click", () =>
+      this.#syncBoardState(this.gameState, newGameState)
+    );
+    qaDiv.append(button);
+  }
+
+  #createNewPiece(newPieceObj) {
+    const { type, color, y, x } = newPieceObj;
+    const pieceLookup = {
+      rook: new Rook(type, color, this, y, x),
+      knight: new Knight(type, color, this, y, x),
+      bishop: new Bishop(type, color, this, y, x),
+      queen: new Queen(type, color, this, y, x),
+      king: new King(type, color, this, y, x),
+      pawn: new Pawn(type, color, this, y, x),
+    };
+    return pieceLookup[type];
+  }
+
   // Starting board state. Only called once on app start
   #setStartingGameState() {
     const gameState = [];
     for (let y = 0; y < 8; y++) {
       const row = [];
       for (let x = 0; x < 8; x++) {
-        row.push(this.#getPiece(y, x));
+        row.push(this.#getStartingPiece(y, x));
         //row.push(doubleCheck(y, x, this));
         //row.push(castle(y, x, this));
         //row.push(pawnConversion(y, x, this));
@@ -149,27 +243,13 @@ export class Board {
       boardContainer.appendChild(row);
     }
   }
+  //generatePieceImages
   // Render images on board according to 'gameState'
-  #generatePieceImages(gameState) {
+  #generateStartingImages(gameState) {
     for (let y = 0; y < gameState.length; y++) {
       for (let x = 0; x < gameState[0].length; x++) {
-        const space = document.getElementById(`${y}-${x}`);
-        // If gamestate[y][x] is null, remove img
-        if (!gameState[y][x]) {
-          const img = space.querySelector("img");
-          if (img) {
-            img.remove();
-          }
-          continue;
-        }
-
         const piece = gameState[y][x];
-        const img = document.createElement("img");
-        img.src = `./pieces/${piece.type}-${piece.color}.svg`;
-        img.width = 50;
-        img.height = 50;
-        img.dataset.coordinates = `${y}-${x}`;
-        space.appendChild(img);
+        generateImg(y, x, piece);
       }
     }
   }
@@ -215,7 +295,6 @@ export class Board {
         this.activePlayer["color"]
       );
       if (!isMoveValid) return;
-      console.log(`isMoveValid returned in: ${isMoveValid}`);
       const moveWasSuccessful = this.EXECUTE_MOVE[isMoveValid](
         this.y_end,
         this.x_end,
@@ -313,6 +392,8 @@ export class Board {
   }
 
   #passTurn() {
+    console.log(this.gameState);
+    this.#syncBoardStateQAButton();
     const activePlayerDiv = document.getElementById("active-player-div");
     activePlayerDiv.innerText = "Active player: White";
     this.activePlayer["color"] == "white"

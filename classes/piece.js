@@ -1,4 +1,4 @@
-import { killPiece } from "../helpers/misc.js";
+import { killPiece } from "../helpers/piece.js";
 
 export class Piece {
   constructor(type, color, board, y, x) {

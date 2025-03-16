@@ -1,3 +1,5 @@
+//import { syncBoardStateQAButton } from "../qa/syncBoardState.js";
+//import { doubleCheck, castle, pawnConversion } from "../qa/board-states.js";
 import { Pawn } from "./pawn.js";
 import { Rook } from "./rook.js";
 import { Bishop } from "./bishop.js";
@@ -5,18 +7,14 @@ import { Queen } from "./queen.js";
 import { King } from "./king.js";
 import { Knight } from "./knight.js";
 import {
-  doubleCheck,
-  castle,
-  pawnConversion,
-} from "../alternate-board-states/board-states.js";
-import {
   executeRegularMove,
   executeCastle,
   executeEnPassant,
-} from "../helpers/movement.js";
+  deleteImg,
+  generateImg,
+  killPiece,
+} from "../helpers/piece.js";
 import { pieceChoices } from "../constants.js";
-import { deleteImg, generateImg, killPiece } from "../helpers/misc.js";
-import { syncBoardStateQAButton } from "../qa/syncBoardState.js";
 
 export class Board {
   constructor(player) {

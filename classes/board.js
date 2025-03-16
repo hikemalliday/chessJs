@@ -51,6 +51,19 @@ export class Board {
       });
     }
     this.lastMove = [];
+    this.#checkTurn();
+  }
+
+  async #checkTurn() {
+    try {
+      setInterval(async () => {
+        const response = await fetch("http://localhost:8001/check_turn");
+        if (!response.ok)
+          throw new Error(`HTTP error! Status: ${response.status}`);
+      }, 3000);
+    } catch (err) {
+      console.error("Error:", err);
+    }
   }
 
   getKing(gameState, color) {

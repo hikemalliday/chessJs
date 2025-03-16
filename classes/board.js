@@ -392,8 +392,7 @@ export class Board {
   }
 
   #passTurn() {
-    console.log(this.gameState);
-    this.#syncBoardStateQAButton();
+    //this.#syncBoardStateQAButton();
     const activePlayerDiv = document.getElementById("active-player-div");
     activePlayerDiv.innerText = "Active player: White";
     this.activePlayer["color"] == "white"

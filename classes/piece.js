@@ -1,3 +1,5 @@
+import { killPiece } from "misc.js";
+
 export class Piece {
   constructor(type, color, board, y, x) {
     this.board = board;
@@ -111,22 +113,11 @@ export class Piece {
     if (landingSpace && landingSpace.color !== this.color) return 1;
   }
 
-  killPiece(y_end, x_end, gameState) {
-    const killedPiece = gameState[y_end][x_end];
-
-    gameState[y_end][x_end] = null;
-    if (killedPiece) {
-      killedPiece.y = y_end;
-      killedPiece.x = x_end;
-    }
-    return killedPiece;
-  }
-  // refactor to just pass y, x
   executeMove(y_end, x_end, gameState) {
     gameState[this.y][this.x] = null;
     this.y = y_end;
     this.x = x_end;
-    const killedPiece = this.killPiece(y_end, x_end, gameState);
+    const killedPiece = killPiece(y_end, x_end, gameState);
     // Move piece
     gameState[y_end][x_end] = this;
     this.hasMoved = true;

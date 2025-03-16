@@ -19,7 +19,8 @@ import { deleteImg, generateImg, killPiece } from "../helpers/misc.js";
 import { syncBoardStateQAButton } from "../qa/syncBoardState.js";
 
 export class Board {
-  constructor() {
+  constructor(player) {
+    this.player = player;
     this.gameState = this.#setStartingGameState();
     this.#generateBoard();
     this.activePlayer = { color: "white" }; // switch back to white after testing double checl
@@ -337,7 +338,7 @@ export class Board {
   }
 
   #passTurn() {
-    syncBoardStateQAButton(this.#syncBoardState, this.gameState);
+    // syncBoardStateQAButton(this.#syncBoardState, this.gameState);
     const activePlayerDiv = document.getElementById("active-player-div");
     activePlayerDiv.innerText = "Active player: White";
     this.activePlayer["color"] == "white"

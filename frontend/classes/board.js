@@ -58,13 +58,13 @@ export class Board {
     setInterval(async () => {
       try {
         if (this.activePlayer["color"] !== this.player.color) return;
-        const response = await fetch("http://localhost:8001/check_turn");
+        const response = await fetch("http://localhost:8001/get_game_state");
         if (!response.ok)
           throw new Error(`HTTP error! Status: ${response.status}`);
 
         const data = await response.json();
         if (data.player === this.player.color) {
-          this.#syncBoardState(this.gameState, data.newBoardState);
+          this.#syncBoardState(this.gameState, data.gameState);
           this.activePlayer["color"] =
             this.activePlayer["color"] === "white" ? "black" : "white";
         }

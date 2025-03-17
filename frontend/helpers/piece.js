@@ -171,7 +171,6 @@ export function executeEnPassant(
   draggedPiece.x = x_end;
   gameState[y_end][x_end] = draggedPiece;
   draggedPiece.hasMoved = true;
-  console.log("en passant complete, returning true now");
   return true;
 }
 

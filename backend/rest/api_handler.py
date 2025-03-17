@@ -13,7 +13,7 @@ class ThreadingHTTPServer(socketserver.ThreadingMixIn, HTTPServer):
 class APIHandler(BaseHTTPRequestHandler):
 
     GET_REQUESTS = {
-        "/check_turn": get_check_turn,
+        "/get_game_state": get_game_state,
     }
 
     def _set_headers(self, status=200):

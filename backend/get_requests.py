@@ -1,2 +1,2 @@
-def get_check_turn():
-    return {"message": "Hello, world!"}
+def get_game_state():
+    return {"player": "black", "gameState": []}

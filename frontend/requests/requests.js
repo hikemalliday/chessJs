@@ -22,8 +22,8 @@ export async function postGameState(payload) {
       headers: {
         "X-API-Key": API_KEY,
         "Content-Type": "application/json",
-        body: JSON.stringify(payload),
       },
+      body: JSON.stringify(payload),
     });
     if (!response.ok) {
       throw new Error(`postGameState error! Status: ${response.status}`);

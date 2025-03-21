@@ -1,3 +1,5 @@
+import { postGameState } from "../requests/requests.js";
+
 export function updateActivePlayer(activePlayer) {
   activePlayer["color"] = activePlayer["color"] === "white" ? "black" : "white";
 }
@@ -93,4 +95,21 @@ export function generateImg(y, x, piece) {
   img.height = 50;
   img.dataset.coordinates = `${y}-${x}`;
   space.appendChild(img);
+}
+
+export function handlePostGameState(activePlayer, gameState) {
+  const convertedGameState = Array(8)
+    .fill()
+    .map(() => Array(8).fill(null));
+  for (let y = 0; y < gameState.length; y++) {
+    for (let x = 0; x < gameState[0].length; x++) {
+      const space = gameState[y][x];
+      if (!space) continue;
+      convertedGameState[y][x] = { type: space["type"], color: space["color"] };
+    }
+  }
+  postGameState({
+    activePlayer: activePlayer["color"],
+    gameState: convertedGameState,
+  });
 }

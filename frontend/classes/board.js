@@ -10,7 +10,6 @@ import {
   executeRegularMove,
   executeCastle,
   executeEnPassant,
-  generateImg,
   killPiece,
 } from "../helpers/piece.js";
 import {
@@ -20,6 +19,8 @@ import {
   generateBoard,
   generateStartingImages,
   deleteImg,
+  generateImg,
+  handlePostGameState,
 } from "../helpers/board.js";
 import { pieceChoices, RETRY_INTERVAL } from "../constants.js";
 import { getGameState, postGameState } from "../requests/requests.js";
@@ -324,5 +325,6 @@ export class Board {
     updateActivePlayerText(this.activePlayer);
     updateActivePlayer(this.activePlayer);
     determineCheck(this);
+    handlePostGameState(this.activePlayer, this.gameState);
   }
 }

@@ -45,10 +45,9 @@ CREATE TABLE IF NOT EXISTS game_state (
     def post_game_state(self, payload):
         if not isinstance(payload, dict) and not "activePlayer" in payload and not "gameState" in payload:
             raise ValueError("Invalid payload. Must be dict and have the correct keys.")
-        
         active_player = payload["activePlayer"]
         game_state = payload["gameState"]
-        self.cursor.execute(self.insert_query, (active_player, game_state))
+        self.cursor.execute(self.insert_query, (active_player, json.dumps(game_state)))
         self.conn.commit()
         return {"message": "Successfully inserted into 'game_state' table."}
 

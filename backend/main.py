@@ -3,7 +3,10 @@ from db.db_handler import DbHandler
 
 
 if __name__ == "__main__":
-    DbHandler().create_tables()
+    db_handler = DbHandler()
+    db_handler.create_tables()
+    db_handler.get_game_state()
+    APIHandler.db_handler = db_handler
     port = 8001
     server_address = ("", port)
     httpd = ThreadingHTTPServer(server_address, APIHandler)

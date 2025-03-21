@@ -1,7 +1,7 @@
 import json
 import socketserver
 from http.server import BaseHTTPRequestHandler, HTTPServer
-from get_requests import get_check_turn
+from get_requests import get_game_state
 from constants import ALLOWED_ORIGINS
 
 
@@ -12,6 +12,8 @@ class ThreadingHTTPServer(socketserver.ThreadingMixIn, HTTPServer):
 
 class APIHandler(BaseHTTPRequestHandler):
 
+    db_handler = None
+    
     GET_REQUESTS = {
         "/get_game_state": get_game_state,
     }
@@ -32,7 +34,7 @@ class APIHandler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         try:
-            response = self.GET_REQUESTS[self.path]()
+            response = self.GET_REQUESTS[self.path](self.db_handler)
 
         except KeyError:
             response = {"error": "Endpoint not found"}

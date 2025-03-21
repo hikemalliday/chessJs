@@ -1,16 +1,21 @@
+import { API_KEY } from "../config.js";
+
 export async function getGameState() {
   try {
     const response = await fetch("http://localhost:8001/game_state", {
       headers: { "X-API-Key": API_KEY },
     });
-    const data = await response.json();
-    console.log(data);
+    if (!response.ok) {
+      throw new Error(`getGameState error! Status: ${response.status}`);
+    }
+    return await response.json();
   } catch (error) {
     console.error(error);
+    throw error;
   }
 }
 
-export async function post(payload) {
+export async function postGameState(payload) {
   try {
     const response = await fetch("http://localhost:8001/game_state", {
       method: "POST",
@@ -20,13 +25,10 @@ export async function post(payload) {
         body: JSON.stringify(payload),
       },
     });
-
     if (!response.ok) {
-      throw new Error(`HTTP Error! Status: ${response.status}`);
+      throw new Error(`postGameState error! Status: ${response.status}`);
     }
-
-    const data = await response.json();
-    console.log(`Success:`, data);
+    return await response.json();
   } catch (error) {
     console.error(`Error: ${error}`);
   }

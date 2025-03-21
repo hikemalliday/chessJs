@@ -40,7 +40,7 @@ CREATE TABLE IF NOT EXISTS game_state (
         row = self.cursor.fetchone()
         if not row:
             return []
-        return {"activePlayer": row[1], "gameState": row[2]}
+        return {"activePlayer": row[1], "gameState": json.loads(row[2])}
     
     def post_game_state(self, payload):
         if not isinstance(payload, dict) and not "activePlayer" in payload and not "gameState" in payload:

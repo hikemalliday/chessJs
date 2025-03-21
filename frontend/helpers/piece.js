@@ -196,21 +196,3 @@ export function killPiece(y_end, x_end, gameState) {
   }
   return killedPiece;
 }
-
-export function deleteImg(y, x) {
-  const img = document.querySelector(`img[data-coordinates="${y}-${x}"]`);
-  if (img) {
-    img.remove();
-  }
-}
-
-export function generateImg(y, x, piece) {
-  if (!piece) return;
-  const space = document.getElementById(`${y}-${x}`);
-  const img = document.createElement("img");
-  img.src = `./pieces/${piece.type}-${piece.color}.svg`;
-  img.width = 50;
-  img.height = 50;
-  img.dataset.coordinates = `${y}-${x}`;
-  space.appendChild(img);
-}

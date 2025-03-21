@@ -14,7 +14,6 @@ class ThreadingHTTPServer(socketserver.ThreadingMixIn, HTTPServer):
     """Handle requests in a separate thread"""
     pass
 
-
 class APIHandler(BaseHTTPRequestHandler):
 
     api_key = os.getenv("api_key")
@@ -37,7 +36,6 @@ class APIHandler(BaseHTTPRequestHandler):
             
         self.send_header('Content-Type', 'application/json')
         self.send_header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
-        self.send_header('Access-Control-Allow-Headers', 'Content-Type')
         self.send_header('Access-Control-Allow-Headers', 'Content-Type, X-API-Key')
         self.end_headers()
 
@@ -55,6 +53,9 @@ class APIHandler(BaseHTTPRequestHandler):
     def _handle_success_response(self, response):
         self._set_headers()
         self.wfile.write(json.dumps(response).encode('utf-8'))
+
+    def do_OPTIONS(self):
+        self._set_headers()
 
     def do_GET(self):
         try:

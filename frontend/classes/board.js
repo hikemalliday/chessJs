@@ -10,19 +10,27 @@ import {
   executeRegularMove,
   executeCastle,
   executeEnPassant,
-  deleteImg,
   generateImg,
   killPiece,
 } from "../helpers/piece.js";
-import { pieceChoices } from "../constants.js";
+import {
+  updateActivePlayer,
+  updateActivePlayerText,
+  determineCheck,
+  generateBoard,
+  generateStartingImages,
+  deleteImg,
+} from "../helpers/board.js";
+import { pieceChoices, RETRY_INTERVAL } from "../constants.js";
+import { getGameState, postGameState } from "../requests/requests.js";
 
 export class Board {
   constructor(player) {
     this.player = player;
     this.gameState = this.#setStartingGameState();
-    this.#generateBoard();
-    this.activePlayer = { color: "white" }; // switch back to white after testing double checl
-    this.#generateStartingImages(this.gameState);
+    generateBoard();
+    this.activePlayer = { color: "white" };
+    generateStartingImages(this.gameState);
     this.EXECUTE_MOVE = {
       1: executeRegularMove,
       2: executeCastle,
@@ -57,21 +65,18 @@ export class Board {
   async #checkTurn() {
     setInterval(async () => {
       try {
-        if (this.activePlayer["color"] !== this.player.color) return;
-        const response = await fetch("http://localhost:8001/get_game_state");
-        if (!response.ok)
-          throw new Error(`HTTP error! Status: ${response.status}`);
-
-        const data = await response.json();
-        if (data.player === this.player.color) {
+        return;
+        if (this.activePlayer["color"] == this.player.color) return;
+        const data = await getGameState();
+        if (data.activePlayer === this.player.color) {
+          console.log("SYNC UP");
           this.#syncBoardState(this.gameState, data.gameState);
-          this.activePlayer["color"] =
-            this.activePlayer["color"] === "white" ? "black" : "white";
+          updateActivePlayer(this.activePlayer);
         }
       } catch (err) {
-        console.error("Error:", err);
+        console.error("checkTurn error:", err);
       }
-    }, 3000);
+    }, RETRY_INTERVAL);
   }
 
   getKing(gameState, color) {
@@ -176,47 +181,6 @@ export class Board {
       gameState.push(row);
     }
     return gameState;
-  }
-  // Selects the "board-container" div, then appends the rows and spaces to it.
-  #generateBoard() {
-    const boardContainer = document.getElementById("board-container");
-
-    for (let y = 0; y < 8; y++) {
-      let row = document.createElement("div");
-      let colorIsWhite = true;
-      row.classList.add("board-row");
-
-      if (y % 2 != 0) {
-        colorIsWhite = false;
-      }
-
-      for (let x = 0; x < 8; x++) {
-        const space = document.createElement("div");
-        space.id = `${y}-${x}`;
-
-        if (colorIsWhite) {
-          space.classList.add("space");
-          space.classList.add("white");
-        } else {
-          space.classList.add("space");
-          space.classList.add("beige");
-        }
-
-        row.appendChild(space);
-        colorIsWhite = !colorIsWhite;
-      }
-      boardContainer.appendChild(row);
-    }
-  }
-  //generatePieceImages
-  // Render images on board according to 'gameState'
-  #generateStartingImages(gameState) {
-    for (let y = 0; y < gameState.length; y++) {
-      for (let x = 0; x < gameState[0].length; x++) {
-        const piece = gameState[y][x];
-        generateImg(y, x, piece);
-      }
-    }
   }
 
   #addImgEventListeners(img) {
@@ -357,39 +321,8 @@ export class Board {
   }
 
   #passTurn() {
-    // syncBoardStateQAButton(this.#syncBoardState, this.gameState);
-    const activePlayerDiv = document.getElementById("active-player-div");
-    activePlayerDiv.innerText = "Active player: White";
-    this.activePlayer["color"] == "white"
-      ? (activePlayerDiv.innerText = "Active player: Black")
-      : (activePlayerDiv.innerText = "Active player: White");
-    this.activePlayer["color"] == "white"
-      ? (this.activePlayer["color"] = "black")
-      : (this.activePlayer["color"] = "white");
-    const king = this.KING[this.activePlayer["color"]];
-    const threats = king.getThreats(this.gameState, this.activePlayer["color"]);
-    const checkDiv = document.getElementById("check") ?? false;
-    if (threats.length == 0) {
-      checkDiv.innerText = "";
-      return;
-    }
-    // If threats exist, determine checkmate
-    let canMoveOutOfCheck = null;
-    let canBlockOrKillThreat = null;
-    canMoveOutOfCheck = king.canMoveOutOfCheck(
-      this.gameState,
-      this.activePlayer["color"]
-    );
-    if (!canMoveOutOfCheck) {
-      canBlockOrKillThreat = king.canBlockOrKillThreat(
-        threats,
-        this.gameState,
-        this.activePlayer["color"]
-      );
-    }
-    checkDiv.innerText = `${this.activePlayer["color"]} king is in check`;
-    if (!canBlockOrKillThreat && !canMoveOutOfCheck) {
-      checkDiv.innerText = `Checkmate. ${this.activePlayer["color"]} loses!`;
-    }
+    updateActivePlayerText(this.activePlayer);
+    updateActivePlayer(this.activePlayer);
+    determineCheck(this);
   }
 }

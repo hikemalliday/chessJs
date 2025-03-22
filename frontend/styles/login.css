@@ -1,0 +1,33 @@
+html,
+body {
+  height: 100%;
+  margin: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #f4f4f4;
+}
+
+.card-div {
+  width: 300px;
+  background-color: rgb(231, 231, 231);
+  border-radius: 15px;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.card-header {
+  height: 20px;
+  background-color: rgb(168, 168, 168);
+  color: rgb(255, 252, 252);
+  justify-content: center;
+  align-items: center;
+  border-top-left-radius: 15px;
+  border-top-right-radius: 15px;
+  display: flex;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.login-signup-inputs {
+  display: flex;
+  flex-direction: column;
+}

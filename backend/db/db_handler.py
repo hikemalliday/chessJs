@@ -1,6 +1,6 @@
 import sqlite3
 import json
-from db.mock_data import mock_game_state
+from db.mock_data import starting_game_state
 
 class DbHandler():
 
@@ -8,11 +8,21 @@ class DbHandler():
 CREATE TABLE IF NOT EXISTS game_state (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     activePlayer TEXT NOT NULL,
-    gameState TEXT NOT NULL
+    gameState TEXT NOT NULL,
+    game INTEGER NOT NULL,
+    FOREIGN KEY (game) REFERENCES game(id) ON DELETE CASCADE
 );
 """
 
-    tables = [game_state_table]
+    game_table = """
+CREATE TABLE IF NOT EXISTS game (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    white TEXT NOT NULL,
+    black TEXT NOT NULL,
+)
+"""
+
+    tables = [game_state_table, game_table]
 
     def __init__(self):
         self.conn = sqlite3.connect("game.db", check_same_thread=False)
@@ -30,8 +40,8 @@ CREATE TABLE IF NOT EXISTS game_state (
         except Exception as e:
             print(f"ERROR: Could not create table: {e}")
     
-    def insert_mock_data(self):
-        values = ("black", json.dumps(mock_game_state))
+    def insert_starting_game_state(self):
+        values = ("white", json.dumps(starting_game_state))
         self.cursor.execute(self.insert_query, values)
         self.conn.commit()
 

@@ -4,7 +4,7 @@ import json
 import socketserver
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from get_requests import get_game_state
-from post_requests import post_game_state
+from post_requests import post_game_state, post_start_game
 from constants import ALLOWED_ORIGINS
 from .exception_classes import AuthenticationError
 
@@ -16,13 +16,14 @@ class ThreadingHTTPServer(socketserver.ThreadingMixIn, HTTPServer):
 
 class APIHandler(BaseHTTPRequestHandler):
 
-    api_key = os.getenv("api_key")
+    api_key = os.getenv("API_KEY")
     db_handler = None
     GET_REQUESTS = {
         "/game_state": get_game_state,
     }
     POST_REQUESTS = {
         "/game_state": post_game_state,
+        "/start_game": post_start_game,
     }
 
     def _set_headers(self, status=200):

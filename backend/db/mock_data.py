@@ -1,4 +1,4 @@
-mock_game_state = [
+starting_game_state = [
     [
       { "type": "rook", "color": "black" },
       { "type": "knight", "color": "black" },
@@ -12,7 +12,7 @@ mock_game_state = [
     [
       { "type": "pawn", "color": "black" },
       { "type": "pawn", "color": "black" },
-      None,
+      { "type": "pawn", "color": "black" },
       { "type": "pawn", "color": "black" },
       { "type": "pawn", "color": "black" },
       { "type": "pawn", "color": "black" },

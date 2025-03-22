@@ -1,6 +1,8 @@
 import sqlite3
 import json
+import bcrypt
 from db.mock_data import starting_game_state
+from ..helper import create_jwt
 
 class DbHandler():
 
@@ -31,6 +33,7 @@ CREATE TABLE IF NOT EXISTS game (
             INSERT INTO game_state (activePlayer, gameState) VALUES (?, ?)
             """
         self.get_game_state_query = """SELECT * FROM game_state ORDER BY id DESC LIMIT 1"""
+        self.post_login_query = """SELECT * FROM users WHERE username = ? AND password = ?"""
 
     def create_tables(self):
         try:
@@ -53,14 +56,26 @@ CREATE TABLE IF NOT EXISTS game (
         return {"activePlayer": row[1], "gameState": json.loads(row[2])}
     
     def post_game_state(self, payload):
-        if not isinstance(payload, dict) and not "activePlayer" in payload and not "gameState" in payload:
-            raise ValueError("Invalid payload. Must be dict and have the correct keys.")
+        if not isinstance(payload, dict) or not "activePlayer" in payload or not "gameState" in payload:
+            raise ValueError("Invalid post_game_state payload. Must be dict and have the correct keys.")
         active_player = payload["activePlayer"]
         game_state = payload["gameState"]
         self.cursor.execute(self.insert_query, (active_player, json.dumps(game_state)))
         self.conn.commit()
         return {"message": "Successfully inserted into 'game_state' table."}
-
-
-
-
+    
+    def post_login(self, payload):
+        if not isinstance(payload, dict) or not "username" in payload or not "password" in payload:
+            raise ValueError("Invalid post_login payload. Must be dict and have the correct keys.")
+        username = payload["username"]
+        password = payload["password"]
+        self.cursor.execute("SELECT * FROM users WHERE username = ?", (username,))
+        result = self.cursor.fetchone()
+        if result is None:
+            return {"success": False, "message": "Invalid username or password"}
+        
+        stored_hashed_password = result[0]
+        if bcrypt.checkpw(password.encode('utf-8'), stored_hashed_password.encode('utf-8')):
+            return {"success": True, "message": "Login successful",  "token": create_jwt}
+        else:
+            return {"success": False, "message": "Invalid username or password", "token": None}

@@ -9,6 +9,20 @@ def does_not_raise():
 
 
 class TestValidators:
+
+    VALID_GAME_STATE = [
+        [None, None, None, None, None, None, None, None],
+        [None, None, None, None, None, None, None, None],
+        [None, None, None, None, None, None, None, None],
+        [None, None, None, None, None, None, None, None],
+        [None, None, None, None, None, None, None, None],
+        [None, None, None, None, None, None, None, None],
+        [None, None, None, None, None, None, None, None],
+        [None, None, None, None, None, None, None, None],
+    ]
+    INVALID_GAME_STATE_TOP_LEVEL = []
+    INVALID_GAME_STATE_CHILD_LEVEL = [[], [], [], [], [], [], [], []]
+
     # validators.post_refresh
     def test_post_refresh_valid_payload(self):
         payload = {"refresh": "refresh-token"}
@@ -114,7 +128,7 @@ class TestValidators:
 
     # validators.post_game_state
     def test_post_game_state_valid_payload(self):
-        payload = {"activePlayer": "white", "gameState": []}
+        payload = {"activePlayer": "white", "gameState": self.VALID_GAME_STATE}
         with does_not_raise():
             post_game_state(payload)
 
@@ -124,15 +138,28 @@ class TestValidators:
             ValueError, match="Invalid post_game_state payload: must be a dict"
         ):
             post_game_state(payload)
-    
+
     def test_post_game_state_wrong_key_len(self):
-        payload = {"activePlayer": "white", "gameState": [], "extra_key": None}
+        payload = {"activePlayer": "white", "gameState": self.VALID_GAME_STATE, "extra_key": None}
         with pytest.raises(
             ValueError, match="Invalid post_game_state payload: invalid amount of keys"
         ):
             post_game_state(payload)
+
+    def test_post_game_state_no_activeplayer_key(self):
+        payload = {"invalid-key": None, "gameState": self.VALID_GAME_STATE}
+        with pytest.raises(
+            ValueError,
+            match="Invalid post_game_state payload: must contain 'activePlayer' key",
+        ):
+            post_game_state(payload)
     
-    def test_pose_game_state_no_activeplayer_key(self):
-        payload = {"invalid-key": None, "gameState": []}
-        with pytest.raises(ValueError, match="Invalid post_game_state payload: must contain 'activePlayer' key"):
+    def test_post_game_state_invalid_game_state_top_level(self):
+        payload = {"activePlayer": "white", "gameState": self.INVALID_GAME_STATE_TOP_LEVEL}
+        with pytest.raises(ValueError, match="Invalid post_game_state payload: 'gameState' must have len == 8"):
+            post_game_state(payload)
+
+    def test_post_game_state_invalid_game_state_child_level(self):
+        payload = {"activePlayer": "white", "gameState": self.INVALID_GAME_STATE_CHILD_LEVEL}
+        with pytest.raises(ValueError, match="Invalid post_game_state payload: 'gameState' elements must have len == 8"):
             post_game_state(payload)

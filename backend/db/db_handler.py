@@ -55,7 +55,7 @@ CREATE TABLE IF NOT EXISTS game (
             "users": """
         CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user TEXT NOT NULL,
+        username TEXT NOT NULL,
         hashed_password TEXT NOT NULL
         )
         """,
@@ -117,9 +117,11 @@ CREATE TABLE IF NOT EXISTS game (
             raise ValueError(
                 "Invalid post_signup payload. Must be dict and have the correct keys."
             )
+
         username = payload["username"]
         hashed_password = hash_password(payload["password"])
-        self.cursor.execute(self.queries["signup"], (username, hashed_password))
+        self.cursor.execute(self.queries["post_signup"], (username, hashed_password))
+        self.conn.commit()
 
     def post_login(self, payload):
         if (
@@ -132,7 +134,7 @@ CREATE TABLE IF NOT EXISTS game (
             )
         username = payload["username"]
         password = payload["password"]
-        self.cursor.execute(self.queries["login"], (username,))
+        self.cursor.execute(self.queries["post_login"], (username,))
         result = self.cursor.fetchone()
         if result is None:
             return {"success": False, "message": "Invalid username or password"}

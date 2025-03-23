@@ -50,3 +50,20 @@ export async function postRefresh(payload) {
     throw new Error(`postRefresh error: ${error}`);
   }
 }
+
+export async function postSignUp(payload) {
+  try {
+    const response = await fetch("http://localhost:8001/signup", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+    if (!response.ok) {
+      throw new Error(`postSignUp http error: Status: ${response.status}`);
+    }
+  } catch (error) {
+    throw new Error(`postSignUp error: ${error}`);
+  }
+}

@@ -27,16 +27,18 @@ class APIHandler(BaseHTTPRequestHandler):
 
     api_key = os.getenv("API_KEY")
     db_handler = None
+    exempt_verification_routes = ["/login", "/signup"]
     GET_REQUESTS = {
         "/game_state": get_game_state,
     }
     POST_REQUESTS = {
-        "/post_signup": post_signup,
+        "/signup": post_signup,
         "/login": post_login,
         "/game_state": post_game_state,
         "/start_game": post_start_game,
         "/refresh": post_refresh,
     }
+
 
     def _set_headers(self, status=200):
         self.send_response(status)
@@ -85,7 +87,7 @@ class APIHandler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         try:
-            if self.path != "/login":
+            if self.path not in self.exempt_verification_routes:
                 self._validate_api_key()
             content_length = int(self.headers.get("Content-Length", 0))
             post_data = self.rfile.read(content_length)

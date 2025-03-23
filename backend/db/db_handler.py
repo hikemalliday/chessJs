@@ -2,8 +2,8 @@ import sqlite3
 import json
 import bcrypt
 from db.mock_data import starting_game_state
-from ..helper import create_jwt, decode_jwt, hash_password
-from ..exception_classes import AuthenticationError
+from helper import create_jwt, decode_jwt, hash_password
+from exception_classes import AuthenticationError
 
 
 class DbHandler:

@@ -12,7 +12,7 @@ from post_requests import (
     post_signup,
 )
 from constants import ALLOWED_ORIGINS
-from ..exception_classes import AuthenticationError
+from exception_classes import AuthenticationError
 
 load_dotenv()
 

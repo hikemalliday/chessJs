@@ -1,6 +1,7 @@
 import sqlite3
 import json
 import bcrypt
+import validators
 from db.mock_data import starting_game_state
 from helper import create_jwt, decode_jwt, hash_password
 from exception_classes import AuthenticationError
@@ -82,24 +83,14 @@ CREATE TABLE IF NOT EXISTS game (
         return {"activePlayer": row[1], "gameState": json.loads(row[2])}
 
     def post_refresh(self, payload):
-        if not isinstance(payload, dict) or not "refresh" in payload:
-            raise ValueError(
-                "Invalid post_refresh payload. Must be dict and have the correct keys"
-            )
+        validators.post_refresh(payload)
         refresh = payload["refresh"]
         if not decode_jwt(refresh):
             raise AuthenticationError("Invalid access token.")
         return {"access": create_jwt({"minutes": 120})}
 
     def post_game_state(self, payload):
-        if (
-            not isinstance(payload, dict)
-            or not "activePlayer" in payload
-            or not "gameState" in payload
-        ):
-            raise ValueError(
-                "Invalid post_game_state payload. Must be dict and have the correct keys."
-            )
+        validators.post_game_state(payload)
         active_player = payload["activePlayer"]
         game_state = payload["gameState"]
         self.cursor.execute(
@@ -109,29 +100,14 @@ CREATE TABLE IF NOT EXISTS game (
         return {"message": "Successfully inserted into 'game_state' table."}
 
     def post_signup(self, payload):
-        if (
-            not isinstance(payload, dict)
-            or not "username" in payload
-            or not "password" in payload
-        ):
-            raise ValueError(
-                "Invalid post_signup payload. Must be dict and have the correct keys."
-            )
-
+        validators.post_refresh(payload)
         username = payload["username"]
         hashed_password = hash_password(payload["password"])
         self.cursor.execute(self.queries["post_signup"], (username, hashed_password))
         self.conn.commit()
 
     def post_login(self, payload):
-        if (
-            not isinstance(payload, dict)
-            or not "username" in payload
-            or not "password" in payload
-        ):
-            raise ValueError(
-                "Invalid post_login payload. Must be dict and have the correct keys."
-            )
+        validators.post_login(payload)
         username = payload["username"]
         password = payload["password"]
         self.cursor.execute(self.queries["post_login"], (username,))

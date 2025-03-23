@@ -39,7 +39,6 @@ class APIHandler(BaseHTTPRequestHandler):
         "/refresh": post_refresh,
     }
 
-
     def _set_headers(self, status=200):
         self.send_response(status)
 

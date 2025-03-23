@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login</title>
+    <link rel="stylesheet" href="../styles/login.css" />
+  </head>
+  <body>
+    <div class="card-div" id="signup-card-div">
+      <div class="card-header" id="signup-card-header-div">SIGN-UP</div>
+      <form id="signup-form" method="POST">
+        <div class="login-signup-inputs" id="signup-inputs">
+          <input
+            type="text"
+            id="username-input"
+            name="username"
+            placeholder="Username"
+          />
+          <input
+            type="text"
+            id="password-input"
+            name="password"
+            placeholder="Password"
+          />
+          <button type="submit">Submit</button>
+        </div>
+      </form>
+    </div>
+  </body>
+  <script type="module">
+    import { SIGNUP_URI } from "../constants.js";
+    document.getElementById("signup-form").onsubmit = function (e) {
+      e.preventDefault();
+      this.action = SIGNUP_URI;
+      this.submit();
+    };
+  </script>
+</html>

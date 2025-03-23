@@ -4,7 +4,13 @@ import json
 import socketserver
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from get_requests import get_game_state
-from post_requests import post_game_state, post_start_game, post_login, post_refresh
+from post_requests import (
+    post_game_state,
+    post_start_game,
+    post_login,
+    post_refresh,
+    post_signup,
+)
 from constants import ALLOWED_ORIGINS
 from ..exception_classes import AuthenticationError
 
@@ -25,6 +31,7 @@ class APIHandler(BaseHTTPRequestHandler):
         "/game_state": get_game_state,
     }
     POST_REQUESTS = {
+        "/post_signup": post_signup,
         "/login": post_login,
         "/game_state": post_game_state,
         "/start_game": post_start_game,

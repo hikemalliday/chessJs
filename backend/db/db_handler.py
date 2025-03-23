@@ -2,7 +2,7 @@ import sqlite3
 import json
 import bcrypt
 from db.mock_data import starting_game_state
-from ..helper import create_jwt, decode_jwt
+from ..helper import create_jwt, decode_jwt, hash_password
 from ..exception_classes import AuthenticationError
 
 
@@ -30,8 +30,9 @@ CREATE TABLE IF NOT EXISTS game (
         self.conn = sqlite3.connect("game.db", check_same_thread=False)
         self.cursor = self.conn.cursor()
         self.queries = {
-            "post_game_state": """INSERT INTO game_state (activePlayer, gameState) VALUES (?, ?)""",
+            "post_signup": """INSERT INTO users (username, hashed_password) VALUES (?, ?)""",
             "post_login": """SELECT * FROM users WHERE username = ? AND password = ?""",
+            "post_game_state": """INSERT INTO game_state (activePlayer, gameState) VALUES (?, ?)""",
             "get_game_state": """SELECT * FROM game_state ORDER BY id DESC LIMIT 1""",
         }
         self.tables = {
@@ -41,20 +42,29 @@ CREATE TABLE IF NOT EXISTS game (
         activePlayer TEXT NOT NULL,
         gameState TEXT NOT NULL,
         game INTEGER NOT NULL,
-        FOREIGN KEY (game) REFERENCES game(id) ON DELETE CASCADE)
+        FOREIGN KEY (game) REFERENCES game(id) ON DELETE CASCADE
+        )
         """,
             "game": """
         CREATE TABLE IF NOT EXISTS game (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         white TEXT NOT NULL,
-        black TEXT NOT NULL)
+        black TEXT NOT NULL
+        )
+        """,
+            "users": """
+        CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user TEXT NOT NULL,
+        hashed_password TEXT NOT NULL
+        )
         """,
         }
 
     def create_tables(self):
         try:
-            for table in self.tables:
-                self.cursor.execute(table)
+            for _, query in self.tables.items():
+                self.cursor.execute(query)
                 self.conn.commit()
         except Exception as e:
             print(f"ERROR: Could not create table: {e}")
@@ -97,6 +107,19 @@ CREATE TABLE IF NOT EXISTS game (
         )
         self.conn.commit()
         return {"message": "Successfully inserted into 'game_state' table."}
+
+    def post_signup(self, payload):
+        if (
+            not isinstance(payload, dict)
+            or not "username" in payload
+            or not "password" in payload
+        ):
+            raise ValueError(
+                "Invalid post_signup payload. Must be dict and have the correct keys."
+            )
+        username = payload["username"]
+        hashed_password = hash_password(payload["password"])
+        self.cursor.execute(self.queries["signup"], (username, hashed_password))
 
     def post_login(self, payload):
         if (

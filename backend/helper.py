@@ -1,5 +1,6 @@
 import jwt
 import datetime
+import bcrypt
 
 
 def create_jwt(payload, secret, **kwargs):
@@ -24,3 +25,9 @@ def decode_jwt(token, secret):
         return {"error": f"Token has expired: {e}"}
     except jwt.InvalidTokenError as e:
         return {"error": f"Invalid token: {e}"}
+
+
+def hash_password(password):
+    salt = bcrypt.gensalt()
+    hashed_password = bcrypt.hashpw(password.encode("utf-8"), salt)
+    return hashed_password.decode("utf-8")

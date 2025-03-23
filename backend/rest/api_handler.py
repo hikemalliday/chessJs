@@ -3,15 +3,15 @@ from dotenv import load_dotenv
 import json
 import socketserver
 from http.server import BaseHTTPRequestHandler, HTTPServer
-from get_requests import get_game_state
-from post_requests import (
+from rest.request_handlers import (
+    get_game_state,
     post_game_state,
     post_start_game,
     post_login,
     post_refresh,
     post_signup,
 )
-from constants import ALLOWED_ORIGINS
+from constants import ALLOWED_ORIGINS, ALLOWED_METHODS
 from exception_classes import AuthenticationError
 
 load_dotenv()
@@ -49,8 +49,9 @@ class APIHandler(BaseHTTPRequestHandler):
             self.send_header("Access-Control-Allow-Origin", "null")
 
         self.send_header("Content-Type", "application/json")
+        # Can these be condensed to one line?
         self.send_header(
-            "Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS"
+            "Access-Control-Allow-Methods", ALLOWED_METHODS
         )
         self.send_header("Access-Control-Allow-Headers", "Content-Type, X-API-Key")
         self.end_headers()

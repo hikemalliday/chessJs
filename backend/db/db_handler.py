@@ -1,7 +1,7 @@
 import sqlite3
 import json
 import bcrypt
-import validators
+import db.validators as validators
 from db.mock_data import starting_game_state
 from helper import create_jwt, decode_jwt, hash_password
 from exception_classes import AuthenticationError
@@ -81,10 +81,15 @@ CREATE TABLE IF NOT EXISTS game (
             row = self.cursor.fetchone()
             if not row:
                 raise ValueError("get_game_state: row not found in database.")
-            return {"message": "Succesfully retrieved game_state row from database", "activePlayer": row[1], "gameState": json.loads(row[2])}
+            return {
+                "message": "Succesfully retrieved game_state row from database",
+                "activePlayer": row[1],
+                "gameState": json.loads(row[2]),
+            }
         except Exception as e:
             raise Exception(f"get_game_state: Unexpected error: {e}")
 
+    # This doesnt need to be here, it doesnt touch the DB. We should probably move some things out of here
     def post_refresh(self, payload):
         validators.post_refresh(payload)
         refresh = payload["refresh"]
@@ -145,4 +150,3 @@ CREATE TABLE IF NOT EXISTS game (
                 }
         except Exception as e:
             raise Exception(f"post_login: Unexpected error: {e}") from e
-

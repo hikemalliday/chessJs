@@ -61,7 +61,7 @@ class APIHandler(BaseHTTPRequestHandler):
             raise AuthenticationError("API Key is invalid")
 
     def _handle_err_response(self, err_type, exc, status_code):
-        response = {"error": f"{err_type}: {exc}"}
+        response = {"message": f"{err_type}: {exc}"}
         self._set_headers(status=status_code)
         self.wfile.write(json.dumps(response).encode("utf-8"))
 

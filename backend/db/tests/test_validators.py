@@ -140,7 +140,11 @@ class TestValidators:
             post_game_state(payload)
 
     def test_post_game_state_wrong_key_len(self):
-        payload = {"activePlayer": "white", "gameState": self.VALID_GAME_STATE, "extra_key": None}
+        payload = {
+            "activePlayer": "white",
+            "gameState": self.VALID_GAME_STATE,
+            "extra_key": None,
+        }
         with pytest.raises(
             ValueError, match="Invalid post_game_state payload: invalid amount of keys"
         ):
@@ -153,13 +157,25 @@ class TestValidators:
             match="Invalid post_game_state payload: must contain 'activePlayer' key",
         ):
             post_game_state(payload)
-    
+
     def test_post_game_state_invalid_game_state_top_level(self):
-        payload = {"activePlayer": "white", "gameState": self.INVALID_GAME_STATE_TOP_LEVEL}
-        with pytest.raises(ValueError, match="Invalid post_game_state payload: 'gameState' must have len == 8"):
+        payload = {
+            "activePlayer": "white",
+            "gameState": self.INVALID_GAME_STATE_TOP_LEVEL,
+        }
+        with pytest.raises(
+            ValueError,
+            match="Invalid post_game_state payload: 'gameState' must have len == 8",
+        ):
             post_game_state(payload)
 
     def test_post_game_state_invalid_game_state_child_level(self):
-        payload = {"activePlayer": "white", "gameState": self.INVALID_GAME_STATE_CHILD_LEVEL}
-        with pytest.raises(ValueError, match="Invalid post_game_state payload: 'gameState' elements must have len == 8"):
+        payload = {
+            "activePlayer": "white",
+            "gameState": self.INVALID_GAME_STATE_CHILD_LEVEL,
+        }
+        with pytest.raises(
+            ValueError,
+            match="Invalid post_game_state payload: 'gameState' elements must have len == 8",
+        ):
             post_game_state(payload)

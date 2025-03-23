@@ -76,59 +76,73 @@ CREATE TABLE IF NOT EXISTS game (
         self.conn.commit()
 
     def get_game_state(self):
-        self.cursor.execute(self.queries["get_game_state"])
-        row = self.cursor.fetchone()
-        if not row:
-            return []
-        return {"activePlayer": row[1], "gameState": json.loads(row[2])}
+        try:
+            self.cursor.execute(self.queries["get_game_state"])
+            row = self.cursor.fetchone()
+            if not row:
+                raise ValueError("get_game_state: row not found in database.")
+            return {"message": "Succesfully retrieved game_state row from database", "activePlayer": row[1], "gameState": json.loads(row[2])}
+        except Exception as e:
+            raise Exception(f"get_game_state: Unexpected error: {e}")
 
     def post_refresh(self, payload):
         validators.post_refresh(payload)
         refresh = payload["refresh"]
         if not decode_jwt(refresh):
-            raise AuthenticationError("Invalid access token.")
+            raise AuthenticationError("post_refresh: Invalid refresh token.")
         return {"access": create_jwt({"minutes": 120})}
 
     def post_game_state(self, payload):
-        validators.post_game_state(payload)
-        active_player = payload["activePlayer"]
-        game_state = payload["gameState"]
-        self.cursor.execute(
-            self.queries["post_game_state"], (active_player, json.dumps(game_state))
-        )
-        self.conn.commit()
-        return {"message": "Successfully inserted into 'game_state' table."}
+        try:
+            validators.post_game_state(payload)
+            active_player = payload["activePlayer"]
+            game_state = payload["gameState"]
+            self.cursor.execute(
+                self.queries["post_game_state"], (active_player, json.dumps(game_state))
+            )
+            self.conn.commit()
+            return {"message": "Successfully inserted into 'game_state' table."}
+        except Exception as e:
+            raise Exception(f"post_game_state: Unexpected error: {e}")
 
     def post_signup(self, payload):
-        validators.post_refresh(payload)
-        username = payload["username"]
-        hashed_password = hash_password(payload["password"])
-        self.cursor.execute(self.queries["post_signup"], (username, hashed_password))
-        self.conn.commit()
-
-    def post_login(self, payload):
-        validators.post_login(payload)
-        username = payload["username"]
-        password = payload["password"]
-        self.cursor.execute(self.queries["post_login"], (username,))
-        result = self.cursor.fetchone()
-        if result is None:
-            return {"success": False, "message": "Invalid username or password"}
-
-        stored_hashed_password = result[0]
-        if bcrypt.checkpw(
-            password.encode("utf-8"), stored_hashed_password.encode("utf-8")
-        ):
+        try:
+            validators.post_refresh(payload)
+            username = payload["username"]
+            hashed_password = hash_password(payload["password"])
+            self.cursor.execute(
+                self.queries["post_signup"], (username, hashed_password)
+            )
+            self.conn.commit()
             return {
-                "success": True,
-                "message": "Login successful",
+                "message": "Account created successfully.",
                 "access": create_jwt({"minutes": 120}),
                 "refresh": create_jwt({"days": 7}),
             }
-        else:
-            return {
-                "success": False,
-                "message": "Invalid username or password",
-                "access": None,
-                "refresh": None,
-            }
+        except sqlite3.IntegrityError as e:
+            raise ValueError("Username already exists") from e
+        except Exception as e:
+            raise Exception(f"post_signup: Unexpected error: {e}") from e
+
+    def post_login(self, payload):
+        try:
+            validators.post_login(payload)
+            username = payload["username"]
+            password = payload["password"]
+            self.cursor.execute(self.queries["post_login"], (username,))
+            result = self.cursor.fetchone()
+            if result is None:
+                raise ValueError("post_login: Invalid username or password")
+
+            stored_hashed_password = result[0]
+            if bcrypt.checkpw(
+                password.encode("utf-8"), stored_hashed_password.encode("utf-8")
+            ):
+                return {
+                    "message": "Login successful",
+                    "access": create_jwt({"minutes": 120}),
+                    "refresh": create_jwt({"days": 7}),
+                }
+        except Exception as e:
+            raise Exception(f"post_login: Unexpected error: {e}") from e
+

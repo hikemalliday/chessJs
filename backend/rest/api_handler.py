@@ -4,15 +4,18 @@ import json
 import socketserver
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from get_requests import get_game_state
-from post_requests import post_game_state, post_start_game, post_login
+from post_requests import post_game_state, post_start_game, post_login, post_refresh
 from constants import ALLOWED_ORIGINS
-from .exception_classes import AuthenticationError
+from ..exception_classes import AuthenticationError
 
 load_dotenv()
 
+
 class ThreadingHTTPServer(socketserver.ThreadingMixIn, HTTPServer):
     """Handle requests in a separate thread"""
+
     pass
+
 
 class APIHandler(BaseHTTPRequestHandler):
 
@@ -25,20 +28,23 @@ class APIHandler(BaseHTTPRequestHandler):
         "/login": post_login,
         "/game_state": post_game_state,
         "/start_game": post_start_game,
+        "/refresh": post_refresh,
     }
 
     def _set_headers(self, status=200):
         self.send_response(status)
 
-        origin = self.headers.get('Origin')
+        origin = self.headers.get("Origin")
         if origin in ALLOWED_ORIGINS:
-            self.send_header('Access-Control-Allow-Origin', origin)
+            self.send_header("Access-Control-Allow-Origin", origin)
         else:
-            self.send_header('Access-Control-Allow-Origin', 'null')
-            
-        self.send_header('Content-Type', 'application/json')
-        self.send_header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
-        self.send_header('Access-Control-Allow-Headers', 'Content-Type, X-API-Key')
+            self.send_header("Access-Control-Allow-Origin", "null")
+
+        self.send_header("Content-Type", "application/json")
+        self.send_header(
+            "Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS"
+        )
+        self.send_header("Access-Control-Allow-Headers", "Content-Type, X-API-Key")
         self.end_headers()
 
     def _validate_api_key(self):
@@ -49,11 +55,11 @@ class APIHandler(BaseHTTPRequestHandler):
     def _handle_err_response(self, err_type, exc, status_code):
         response = {"error": f"{err_type}: {exc}"}
         self._set_headers(status=status_code)
-        self.wfile.write(json.dumps(response).encode('utf-8'))
-    
+        self.wfile.write(json.dumps(response).encode("utf-8"))
+
     def _handle_success_response(self, response):
         self._set_headers()
-        self.wfile.write(json.dumps(response).encode('utf-8'))
+        self.wfile.write(json.dumps(response).encode("utf-8"))
 
     def do_OPTIONS(self):
         self._set_headers()
@@ -74,9 +80,9 @@ class APIHandler(BaseHTTPRequestHandler):
         try:
             if self.path != "/login":
                 self._validate_api_key()
-            content_length = int(self.headers.get('Content-Length', 0))
+            content_length = int(self.headers.get("Content-Length", 0))
             post_data = self.rfile.read(content_length)
-            payload = json.loads(post_data.decode('utf-8'))
+            payload = json.loads(post_data.decode("utf-8"))
             response = self.POST_REQUESTS[self.path](self.db_handler, payload)
         except KeyError as e:
             return self._handle_err_response("KeyError", e, 404)
@@ -87,6 +93,3 @@ class APIHandler(BaseHTTPRequestHandler):
         except Exception as e:
             return self._handle_err_response("Exception", e, 500)
         return self._handle_success_response(response)
-
-        
-    

@@ -11,4 +11,3 @@ if __name__ == "__main__":
     httpd = ThreadingHTTPServer(server_address, APIHandler)
     print(f"Starting threaded server on port {port}...")
     httpd.serve_forever()
-

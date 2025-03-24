@@ -128,7 +128,7 @@ class TestValidators:
 
     # validators.post_game_state
     def test_post_game_state_valid_payload(self):
-        payload = {"activePlayer": "white", "gameState": self.VALID_GAME_STATE}
+        payload = {"activePlayer": "white", "gameState": self.VALID_GAME_STATE, "game": 1}
         with does_not_raise():
             post_game_state(payload)
 
@@ -143,7 +143,6 @@ class TestValidators:
         payload = {
             "activePlayer": "white",
             "gameState": self.VALID_GAME_STATE,
-            "extra_key": None,
         }
         with pytest.raises(
             ValueError, match="Invalid post_game_state payload: invalid amount of keys"
@@ -151,10 +150,18 @@ class TestValidators:
             post_game_state(payload)
 
     def test_post_game_state_no_activeplayer_key(self):
-        payload = {"invalid-key": None, "gameState": self.VALID_GAME_STATE}
+        payload = {"invalid-key": None, "gameState": self.VALID_GAME_STATE, "game": 1}
         with pytest.raises(
             ValueError,
             match="Invalid post_game_state payload: must contain 'activePlayer' key",
+        ):
+            post_game_state(payload)
+    
+    def test_post_game_state_no_game_key(self):
+        payload = {"invalid-key": None, "activePlayer": "white", "gameState": self.VALID_GAME_STATE}
+        with pytest.raises(
+            ValueError,
+            match="Invalid post_game_state payload: must contain 'game' key",
         ):
             post_game_state(payload)
 
@@ -162,6 +169,7 @@ class TestValidators:
         payload = {
             "activePlayer": "white",
             "gameState": self.INVALID_GAME_STATE_TOP_LEVEL,
+            "game": 1,
         }
         with pytest.raises(
             ValueError,
@@ -169,10 +177,12 @@ class TestValidators:
         ):
             post_game_state(payload)
 
+
     def test_post_game_state_invalid_game_state_child_level(self):
         payload = {
             "activePlayer": "white",
             "gameState": self.INVALID_GAME_STATE_CHILD_LEVEL,
+            "game": 1,
         }
         with pytest.raises(
             ValueError,

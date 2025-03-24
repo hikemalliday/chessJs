@@ -47,7 +47,7 @@ def post_signup(payload):
 def post_game_state(payload):
     if not isinstance(payload, dict):
         raise ValueError("Invalid post_game_state payload: must be a dict")
-    if not (len(payload.keys()) == 2):
+    if not (len(payload.keys()) == 3):
         raise ValueError("Invalid post_game_state payload: invalid amount of keys")
     if not "activePlayer" in payload:
         raise ValueError(
@@ -56,5 +56,9 @@ def post_game_state(payload):
     if not "gameState" in payload:
         raise ValueError(
             "Invalid post_game_state payload: must contain 'gameState' key"
+        )
+    if not "game" in payload:
+        raise ValueError(
+            "Invalid post_game_state payload: must contain 'game' key"
         )
     _validate_game_state_object(payload["gameState"])

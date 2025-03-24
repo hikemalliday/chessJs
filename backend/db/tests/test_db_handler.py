@@ -1,12 +1,9 @@
 import pytest
 import sqlite3
-import json
 from backend.db.db_handler import DbHandler
-from backend.db.mock_data import starting_game_state
 
-# Mock external deps
 @pytest.fixture
-def mock_dependencies(mocker):
+def mock_validators(mocker):
     mocker.patch("backend.db.validators.post_refresh", lambda payload: None)
     mocker.patch("backend.db.validators.post_login", lambda payload: None)
     mocker.patch("backend.db.validators.post_game_state", lambda payload: None)
@@ -33,7 +30,7 @@ class TestDbHandler:
         response = db_handler.post_game_state(payload)
         assert response["message"] == "Successfully inserted into 'game_state' table."
 
-    def test_post_signup(self, db_handler, mock_dependencies):
+    def test_post_signup(self, db_handler, mock_validators):
         payload = {"username": "test-user", "password": "test-password"}
         response = db_handler.post_signup(payload)
         assert response["message"] == "Account created successfully."

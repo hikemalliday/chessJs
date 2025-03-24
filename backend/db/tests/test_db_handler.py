@@ -37,6 +37,8 @@ class TestDbHandler:
         payload = {"username": "test-user", "password": "test-password"}
         response = db_handler.post_signup(payload)
         assert response["message"] == "Account created successfully."
+        assert "access" in response
+        assert "refresh" in response
 
         db_handler.cursor.execute("SELECT username, hashed_password FROM user WHERE username = ?", ("test-user",))
         result = db_handler.cursor.fetchone()
@@ -47,4 +49,6 @@ class TestDbHandler:
         db_handler.post_signup(payload)
         response = db_handler.post_login(payload)
         assert response["message"] == "Login successful"
+        assert "refresh" in response
+        assert "access" in response
         

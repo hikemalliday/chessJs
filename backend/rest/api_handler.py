@@ -50,9 +50,7 @@ class APIHandler(BaseHTTPRequestHandler):
 
         self.send_header("Content-Type", "application/json")
         # Can these be condensed to one line?
-        self.send_header(
-            "Access-Control-Allow-Methods", ALLOWED_METHODS
-        )
+        self.send_header("Access-Control-Allow-Methods", ALLOWED_METHODS)
         self.send_header("Access-Control-Allow-Headers", "Content-Type, X-API-Key")
         self.end_headers()
 

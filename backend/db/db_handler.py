@@ -91,7 +91,8 @@ class DbHandler:
             game_state = payload["gameState"]
             game = payload["game"]
             self.cursor.execute(
-                self.queries["post_game_state"], (active_player, json.dumps(game_state), game)
+                self.queries["post_game_state"],
+                (active_player, json.dumps(game_state), game),
             )
             self.conn.commit()
             return {"message": "Successfully inserted into 'game_state' table."}

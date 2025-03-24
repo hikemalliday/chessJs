@@ -128,7 +128,11 @@ class TestValidators:
 
     # validators.post_game_state
     def test_post_game_state_valid_payload(self):
-        payload = {"activePlayer": "white", "gameState": self.VALID_GAME_STATE, "game": 1}
+        payload = {
+            "activePlayer": "white",
+            "gameState": self.VALID_GAME_STATE,
+            "game": 1,
+        }
         with does_not_raise():
             post_game_state(payload)
 
@@ -156,9 +160,13 @@ class TestValidators:
             match="Invalid post_game_state payload: must contain 'activePlayer' key",
         ):
             post_game_state(payload)
-    
+
     def test_post_game_state_no_game_key(self):
-        payload = {"invalid-key": None, "activePlayer": "white", "gameState": self.VALID_GAME_STATE}
+        payload = {
+            "invalid-key": None,
+            "activePlayer": "white",
+            "gameState": self.VALID_GAME_STATE,
+        }
         with pytest.raises(
             ValueError,
             match="Invalid post_game_state payload: must contain 'game' key",
@@ -176,7 +184,6 @@ class TestValidators:
             match="Invalid post_game_state payload: 'gameState' must have len == 8",
         ):
             post_game_state(payload)
-
 
     def test_post_game_state_invalid_game_state_child_level(self):
         payload = {

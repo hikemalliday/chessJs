@@ -58,7 +58,5 @@ def post_game_state(payload):
             "Invalid post_game_state payload: must contain 'gameState' key"
         )
     if not "game" in payload:
-        raise ValueError(
-            "Invalid post_game_state payload: must contain 'game' key"
-        )
+        raise ValueError("Invalid post_game_state payload: must contain 'game' key")
     _validate_game_state_object(payload["gameState"])

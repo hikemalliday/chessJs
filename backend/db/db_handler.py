@@ -38,7 +38,8 @@ class DbHandler:
         CREATE TABLE IF NOT EXISTS game (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         white TEXT NOT NULL,
-        black TEXT NOT NULL
+        black TEXT NOT NULL,
+        is_started INTEGER NOT NULL CHECK (is_started IN (0, 1)) DEFAULT 0
         )
         """,
             "users": """

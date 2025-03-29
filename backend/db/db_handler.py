@@ -122,7 +122,6 @@ class DbHandler:
 
     def post_login(self, payload):
         try:
-            print("post_login debug 1")
             validators.post_login(payload)
             username = payload["username"]
             password = payload["password"]

@@ -23,7 +23,8 @@ class DbHandler:
             "get_game_state": """SELECT activePlayer, gameState, game FROM game_state ORDER BY id DESC LIMIT 1""",
             "insert_starting_game_state": """INSERT INTO game_state (activePlayer, gameState, game) VALUES (?, ?, ?)""",
             "insert_mock_game": """INSERT INTO game (white, black) VALUES (?, ?)""",
-            "post_create_game": """INSERT INTO game (white) VALUES (?)"""
+            "post_create_game": """INSERT INTO game (white) VALUES (?)""",
+            "get_created_game_id": """SELECT (id) FROM game WHERE id = ?"""
         }
         self.tables = {
             "game_state": """
@@ -153,9 +154,19 @@ class DbHandler:
     def post_create_game(self, payload):
         try:
             validators.post_create_game(payload)
+            white_ip = payload["white"]
+            self.cursor.execute(self.queries["post_create_game"], (white_ip,))
+            self.conn.commit()
+            game_id = self.cursor.lastrowid
+            return {
+                "message": "Game created successfully",
+                "game_id": game_id,
+            }
         except ValueError as e:
             raise ValueError(f"db_handler.post_create_game: {e}") from e
         except Exception as e:
             raise Exception(f"db_handler.post_create_game: Unexpected error: {e}") from e
+        
+
         
     

@@ -14,10 +14,10 @@ def create_jwt(payload, secret, **kwargs):
         "weeks",
     }
     filtered_kwargs = {k: v for k, v in kwargs.items() if k in valid_keys}
-    payload["exp"] = datetime.datetime.now() + datetime.timedelta(**filtered_kwargs)
+    payload["exp"] = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(**filtered_kwargs)
     return jwt.encode(payload, secret, "HS256")
 
-
+# TODO: We need to raise errors here
 def decode_jwt(token, secret):
     try:
         return jwt.decode(token, secret, ["HS256"])

@@ -3,13 +3,12 @@ from dotenv import load_dotenv
 import sqlite3
 import json
 import bcrypt
-import backend.db.validators as validators
-from backend.db.mock_data import starting_game_state
-from backend.helper import create_jwt, decode_jwt, hash_password
-from backend.exception_classes import AuthenticationError
+import db.validators as validators
+from db.mock_data import starting_game_state
+from helper import create_jwt, decode_jwt, hash_password
+from exception_classes import AuthenticationError
 
 load_dotenv()
-
 
 class DbHandler:
 
@@ -21,7 +20,9 @@ class DbHandler:
             "post_signup": """INSERT INTO user (username, hashed_password) VALUES (?, ?)""",
             "post_login": """SELECT hashed_password FROM user WHERE username = ?""",
             "post_game_state": """INSERT INTO game_state (activePlayer, gameState, game) VALUES (?, ?, ?)""",
-            "get_game_state": """SELECT (activePlayer, gameState, game) FROM game_state ORDER BY id DESC LIMIT 1""",
+            "get_game_state": """SELECT activePlayer, gameState, game FROM game_state ORDER BY id DESC LIMIT 1""",
+            "insert_starting_game_state": """INSERT INTO game_state (activePlayer, gameState, game) VALUES (?, ?, ?)""",
+            "insert_mock_game": """INSERT INTO game (white, black) VALUES (?, ?)"""
         }
         self.tables = {
             "game_state": """
@@ -57,9 +58,14 @@ class DbHandler:
         except Exception as e:
             print(f"ERROR: Could not create table: {e}")
 
+    def insert_mock_game(self):
+        values = ("white-player", "black-player")
+        self.cursor.execute(self.queries["insert_mock_game"], values)
+        self.conn.commit()
+
     def insert_starting_game_state(self):
-        values = ("white", json.dumps(starting_game_state))
-        self.cursor.execute(self.insert_query, values)
+        values = ("white", json.dumps(starting_game_state), 1)
+        self.cursor.execute(self.queries["insert_starting_game_state"], values)
         self.conn.commit()
 
     def get_game_state(self):
@@ -67,15 +73,15 @@ class DbHandler:
             self.cursor.execute(self.queries["get_game_state"])
             row = self.cursor.fetchone()
             if not row:
-                raise ValueError("get_game_state: row not found in database.")
+                raise ValueError("db_handler.get_game_state: row not found in database.")
             return {
                 "message": "Succesfully retrieved game_state row from database",
-                "activePlayer": row[1],
-                "gameState": json.loads(row[2]),
+                "activePlayer": row[0],
+                "gameState": json.loads(row[1]),
             }
         except Exception as e:
-            raise Exception(f"get_game_state: Unexpected error: {e}")
-
+            raise Exception(f"db_handler.get_game_state: Unexpected error: {e}")
+    # TODO
     # This doesnt need to be here, it doesnt touch the DB. We should probably move some things out of here
     def post_refresh(self, payload):
         validators.post_refresh(payload)
@@ -97,7 +103,7 @@ class DbHandler:
             self.conn.commit()
             return {"message": "Successfully inserted into 'game_state' table."}
         except Exception as e:
-            raise Exception(f"post_game_state: Unexpected error: {e}")
+            raise Exception(f"db_handler.post_game_state: Unexpected error: {e}")
 
     def post_signup(self, payload):
         try:
@@ -116,7 +122,7 @@ class DbHandler:
         except sqlite3.IntegrityError as e:
             raise ValueError("Username already exists") from e
         except Exception as e:
-            raise Exception(f"post_signup: Unexpected error: {e}") from e
+            raise Exception(f"db_handler.post_signup: Unexpected error: {e}") from e
 
     def post_login(self, payload):
         try:
@@ -126,7 +132,7 @@ class DbHandler:
             self.cursor.execute(self.queries["post_login"], (username,))
             result = self.cursor.fetchone()
             if result is None:
-                raise ValueError("post_login: Invalid username or password")
+                raise ValueError("db_handler.post_login: Invalid username or password")
 
             stored_hashed_password = result[0]
             if bcrypt.checkpw(
@@ -138,4 +144,4 @@ class DbHandler:
                     "refresh": create_jwt({"days": 7}, self.SECRET),
                 }
         except Exception as e:
-            raise Exception(f"post_login: Unexpected error: {e}") from e
+            raise Exception(f"db_handler.post_login: Unexpected error: {e}") from e

@@ -109,3 +109,21 @@ export async function postLogin(payload) {
     throw new Error(`postLogin error: ${error}`);
   }
 }
+
+export async function postCreateGame() {
+  try {
+    const response = await fetch(`${BACKEND_URL}/create_game`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok)
+      throw new Error(`postCreateGame http error: Status: ${response.status}`);
+    const data = await response.json();
+    setTokens(data.access, data.refresh);
+  } catch (error) {
+    throw new Error(`postCreateGame error: ${error}`);
+  }
+}

@@ -20,7 +20,6 @@ def create_jwt(payload, secret, **kwargs):
     return jwt.encode(payload, secret, "HS256")
 
 
-# TODO: We need to raise errors here
 def decode_jwt(token, secret):
     try:
         return jwt.decode(token, secret, ["HS256"])

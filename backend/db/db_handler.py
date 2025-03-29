@@ -85,14 +85,6 @@ class DbHandler:
         except Exception as e:
             raise Exception(f"db_handler.get_game_state: Unexpected error: {e}")
 
-    # TODO
-    # This doesnt need to be here, it doesnt touch the DB. We should probably move some things out of here
-    def post_refresh(self, payload):
-        validators.post_refresh(payload)
-        refresh = payload["refresh"]
-        if not decode_jwt(refresh):
-            raise AuthenticationError("post_refresh: Invalid refresh token.")
-        return {"access": create_jwt({"minutes": 120}, self.SECRET)}
 
     def post_game_state(self, payload):
         try:

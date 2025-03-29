@@ -1,6 +1,8 @@
+import os
 from exception_classes import AuthenticationError
 import db.validators as validators
 from helper import create_jwt, decode_jwt
+
 
 
 # GET Requests
@@ -26,7 +28,7 @@ def post_refresh(_, payload):
     refresh = payload["refresh"]
     if not decode_jwt(refresh):
         raise AuthenticationError("post_refresh: Invalid refresh token.")
-    return {"access": create_jwt({"minutes": 120})}
+    return {"access": create_jwt({}, os.getenv("SECRET", None), {"minutes": 120})}
 
 
 def post_signup(db_handler, payload):

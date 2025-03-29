@@ -69,7 +69,3 @@ def post_create_game(payload):
         raise ValueError("Invalid post_create_game payload: invalid amount of keys")
     if not "white" in payload:
         raise ValueError("Invalid post_create_game payload: must contain 'white' key")
-
-    
-
-

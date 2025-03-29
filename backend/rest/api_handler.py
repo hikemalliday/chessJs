@@ -22,13 +22,16 @@ load_dotenv()
 
 class ThreadingHTTPServer(socketserver.ThreadingMixIn, HTTPServer):
     """Handle requests in a separate thread"""
+
     pass
+
 
 # TODO Should we be using constructor here?
 class APIHandler(BaseHTTPRequestHandler):
     SECRET = os.getenv("SECRET", None)
     db_handler = None
     exempt_verification_routes = ["/login", "/signup"]
+    ip_required_routes = ["/create_game", "/start_game"]
     GET_REQUESTS = {
         "/game_state": get_game_state,
     }
@@ -39,6 +42,7 @@ class APIHandler(BaseHTTPRequestHandler):
         "/start_game": post_start_game,
         "/refresh": post_refresh,
         "/create_game": post_create_game,
+        "/start_game": "place_holder",
     }
 
     def _set_headers(self, status=200):
@@ -108,7 +112,12 @@ class APIHandler(BaseHTTPRequestHandler):
             content_length = int(self.headers.get("Content-Length", 0))
             post_data = self.rfile.read(content_length)
             payload = json.loads(post_data.decode("utf-8"))
-            response = self.POST_REQUESTS[self.path](self.db_handler, payload)
+            if self.path not in self.ip_requried_routes:
+                response = self.POST_REQUESTS[self.path](self.db_handler, payload)
+            else:
+                response = self.POST_REQUESTS[self.path](
+                    self.db_handler, payload, ip=self.client_address[0]
+                )
         except KeyError as e:
             logger.write_error_log_test(e)
             return self._handle_err_response("KeyError", e, 404)

@@ -1,5 +1,11 @@
 import pytest
-from backend.db.validators import post_refresh, post_login, post_signup, post_game_state, post_create_game
+from backend.db.validators import (
+    post_refresh,
+    post_login,
+    post_signup,
+    post_game_state,
+    post_create_game,
+)
 from contextlib import contextmanager
 
 

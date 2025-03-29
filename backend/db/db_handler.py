@@ -24,7 +24,7 @@ class DbHandler:
             "insert_starting_game_state": """INSERT INTO game_state (activePlayer, gameState, game) VALUES (?, ?, ?)""",
             "insert_mock_game": """INSERT INTO game (white, black) VALUES (?, ?)""",
             "post_create_game": """INSERT INTO game (white) VALUES (?)""",
-            "get_created_game_id": """SELECT (id) FROM game WHERE id = ?"""
+            "get_created_game_id": """SELECT (id) FROM game WHERE id = ?""",
         }
         self.tables = {
             "game_state": """
@@ -89,7 +89,7 @@ class DbHandler:
         except Exception as e:
             raise Exception(f"db_handler.get_game_state: Unexpected error: {e}") from e
 
-    def post_game_state(self, payload):
+    def post_game_state(self, payload, **kwargs):
         try:
             validators.post_game_state(payload)
             active_player = payload["activePlayer"]
@@ -106,7 +106,7 @@ class DbHandler:
         except Exception as e:
             raise Exception(f"db_handler.post_game_state: Unexpected error: {e}") from e
 
-    def post_signup(self, payload):
+    def post_signup(self, payload, **kwargs):
         try:
             validators.post_signup(payload)
             username = payload["username"]
@@ -118,7 +118,7 @@ class DbHandler:
             return {
                 "message": "Account created successfully.",
                 "access": create_jwt({}, self.SECRET, **{"minutes": 120}),
-                "refresh": create_jwt({},self.SECRET, **{"days": 7}),
+                "refresh": create_jwt({}, self.SECRET, **{"days": 7}),
             }
         except sqlite3.IntegrityError as e:
             raise ValueError("Username already exists") from e
@@ -127,7 +127,7 @@ class DbHandler:
         except Exception as e:
             raise Exception(f"db_handler.post_signup: Unexpected error: {e}") from e
 
-    def post_login(self, payload):
+    def post_login(self, payload, **kwargs):
         try:
             validators.post_login(payload)
             username = payload["username"]
@@ -151,10 +151,10 @@ class DbHandler:
         except Exception as e:
             raise Exception(f"db_handler.post_login: Unexpected error: {e}") from e
 
-    def post_create_game(self, payload):
+    def post_create_game(self, payload, **kwargs):
         try:
             validators.post_create_game(payload)
-            white_ip = payload["white"]
+            white_ip = kwargs.get("ip", None)
             self.cursor.execute(self.queries["post_create_game"], (white_ip,))
             self.conn.commit()
             game_id = self.cursor.lastrowid
@@ -165,8 +165,6 @@ class DbHandler:
         except ValueError as e:
             raise ValueError(f"db_handler.post_create_game: {e}") from e
         except Exception as e:
-            raise Exception(f"db_handler.post_create_game: Unexpected error: {e}") from e
-        
-
-        
-    
+            raise Exception(
+                f"db_handler.post_create_game: Unexpected error: {e}"
+            ) from e

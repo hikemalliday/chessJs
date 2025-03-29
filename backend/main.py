@@ -8,8 +8,6 @@ from logger import logger
 if __name__ == "__main__":
     # logger.write_error_log_test(
     #     "test error log entry",
-    #     "main.py",
-    #     {"arg1": "va1", "arg2": "val2", "arg3": "val3"},
     # )
     print(create_jwt({}, os.getenv("SECRET", None), minutes=120))
     db_handler = DbHandler()

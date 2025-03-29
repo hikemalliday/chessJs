@@ -5,8 +5,7 @@ import json
 import bcrypt
 import db.validators as validators
 from db.mock_data import starting_game_state
-from helper import create_jwt, decode_jwt, hash_password
-from exception_classes import AuthenticationError
+from helper import create_jwt, hash_password
 
 load_dotenv()
 

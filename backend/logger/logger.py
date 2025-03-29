@@ -23,12 +23,10 @@ def create_error_log_file():
         print(f"create_error_log_file error: {e}")
 
 
-def write_error_log_test(e, function_name, function_args):
+def write_error_log_test(e):
     try:
         with open(error_logs, "a") as file:
-            file.write(
-                f"[{get_cst_timestamp()}]: Function name: {function_name}, Exception: {e}, Function args: {str(function_args)}\n"
-            )
+            file.write(f"[{get_cst_timestamp()}]: Exception: {e}\n")
         print("write_error_log success.")
     except Exception as e:
         print(f"write_error_log_test error: {e}")

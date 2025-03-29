@@ -14,6 +14,7 @@ from rest.request_handlers import (
 )
 from constants import ALLOWED_ORIGINS, ALLOWED_METHODS
 from exception_classes import AuthenticationError
+from logger import logger
 
 load_dotenv()
 
@@ -89,10 +90,13 @@ class APIHandler(BaseHTTPRequestHandler):
             self._validate_token()
             response = self.GET_REQUESTS[self.path](self.db_handler)
         except KeyError as e:
+            logger.write_error_log_test(e)
             return self._handle_err_response("KeyError", e, 404)
         except AuthenticationError as e:
+            logger.write_error_log_test(e)
             return self._handle_err_response("AuthenticationError", e, 401)
         except Exception as e:
+            logger.write_error_log_test(e)
             return self._handle_err_response("Exception", e, 500)
         return self._handle_success_response(response)
 
@@ -105,11 +109,15 @@ class APIHandler(BaseHTTPRequestHandler):
             payload = json.loads(post_data.decode("utf-8"))
             response = self.POST_REQUESTS[self.path](self.db_handler, payload)
         except KeyError as e:
+            logger.write_error_log_test(e)
             return self._handle_err_response("KeyError", e, 404)
         except ValueError as e:
+            logger.write_error_log_test(e)
             return self._handle_err_response("ValueError", e, 400)
         except AuthenticationError as e:
+            logger.write_error_log_test(e)
             return self._handle_err_response("AuthenticationError", e, 401)
         except Exception as e:
+            logger.write_error_log_test(e)
             return self._handle_err_response("Exception", e, 500)
         return self._handle_success_response(response)

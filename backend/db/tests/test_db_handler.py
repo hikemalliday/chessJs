@@ -47,7 +47,7 @@ class TestDbHandler:
         assert "refresh" in response
 
         db_handler.cursor.execute(
-            "SELECT username, hashed_password FROM user WHERE username = ?",
+            "SELECT username, hashed_password FROM users WHERE username = ?",
             ("test-user",),
         )
         result = db_handler.cursor.fetchone()

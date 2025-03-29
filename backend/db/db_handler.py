@@ -85,7 +85,6 @@ class DbHandler:
         except Exception as e:
             raise Exception(f"db_handler.get_game_state: Unexpected error: {e}")
 
-
     def post_game_state(self, payload):
         try:
             validators.post_game_state(payload)

@@ -23,6 +23,7 @@ class DbHandler:
             "get_game_state": """SELECT activePlayer, gameState, game FROM game_state ORDER BY id DESC LIMIT 1""",
             "insert_starting_game_state": """INSERT INTO game_state (activePlayer, gameState, game) VALUES (?, ?, ?)""",
             "insert_mock_game": """INSERT INTO game (white, black) VALUES (?, ?)""",
+            "post_create_game": """INSERT INTO game (white) VALUES (?)"""
         }
         self.tables = {
             "game_state": """
@@ -82,8 +83,10 @@ class DbHandler:
                 "activePlayer": row[0],
                 "gameState": json.loads(row[1]),
             }
+        except ValueError as e:
+            raise ValueError(f"db_handler.get_game_state: {e}") from e
         except Exception as e:
-            raise Exception(f"db_handler.get_game_state: Unexpected error: {e}")
+            raise Exception(f"db_handler.get_game_state: Unexpected error: {e}") from e
 
     def post_game_state(self, payload):
         try:
@@ -97,8 +100,10 @@ class DbHandler:
             )
             self.conn.commit()
             return {"message": "Successfully inserted into 'game_state' table."}
+        except ValueError as e:
+            raise ValueError(f"db_handler.post_game_state: {e}") from e
         except Exception as e:
-            raise Exception(f"db_handler.post_game_state: Unexpected error: {e}")
+            raise Exception(f"db_handler.post_game_state: Unexpected error: {e}") from e
 
     def post_signup(self, payload):
         try:
@@ -116,6 +121,8 @@ class DbHandler:
             }
         except sqlite3.IntegrityError as e:
             raise ValueError("Username already exists") from e
+        except ValueError as e:
+            raise ValueError(f"db_handler.post_signup: {e}") from e
         except Exception as e:
             raise Exception(f"db_handler.post_signup: Unexpected error: {e}") from e
 
@@ -138,5 +145,17 @@ class DbHandler:
                     "access": create_jwt({}, self.SECRET, **{"minutes": 120}),
                     "refresh": create_jwt({}, self.SECRET, **{"days": 7}),
                 }
+        except ValueError as e:
+            raise ValueError(f"db_handler.post_login: {e}") from e
         except Exception as e:
             raise Exception(f"db_handler.post_login: Unexpected error: {e}") from e
+
+    def post_create_game(self, payload):
+        try:
+            validators.post_create_game(payload)
+        except ValueError as e:
+            raise ValueError(f"db_handler.post_create_game: {e}") from e
+        except Exception as e:
+            raise Exception(f"db_handler.post_create_game: Unexpected error: {e}") from e
+        
+    

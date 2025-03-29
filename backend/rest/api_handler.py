@@ -11,6 +11,7 @@ from rest.request_handlers import (
     post_login,
     post_refresh,
     post_signup,
+    post_create_game,
 )
 from constants import ALLOWED_ORIGINS, ALLOWED_METHODS
 from exception_classes import AuthenticationError
@@ -21,9 +22,7 @@ load_dotenv()
 
 class ThreadingHTTPServer(socketserver.ThreadingMixIn, HTTPServer):
     """Handle requests in a separate thread"""
-
     pass
-
 
 # TODO Should we be using constructor here?
 class APIHandler(BaseHTTPRequestHandler):
@@ -39,6 +38,7 @@ class APIHandler(BaseHTTPRequestHandler):
         "/game_state": post_game_state,
         "/start_game": post_start_game,
         "/refresh": post_refresh,
+        "/create_game": post_create_game,
     }
 
     def _set_headers(self, status=200):

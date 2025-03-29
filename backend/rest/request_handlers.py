@@ -32,3 +32,10 @@ def post_refresh(_, payload):
 
 def post_signup(db_handler, payload):
     return db_handler.post_signup(payload)
+
+
+def post_create_game(db_handler, payload):
+    return db_handler.post_create_game(payload)
+
+
+

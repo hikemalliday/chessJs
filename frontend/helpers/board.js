@@ -90,7 +90,7 @@ export function generateImg(y, x, piece) {
   if (!piece) return;
   const space = document.getElementById(`${y}-${x}`);
   const img = document.createElement("img");
-  img.src = `./pieces/${piece.type}-${piece.color}.svg`;
+  img.src = `../pieces/${piece.type}-${piece.color}.svg`;
   img.width = 50;
   img.height = 50;
   img.dataset.coordinates = `${y}-${x}`;

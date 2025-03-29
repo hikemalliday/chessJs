@@ -10,6 +10,7 @@ from exception_classes import AuthenticationError
 
 load_dotenv()
 
+
 class DbHandler:
 
     def __init__(self):
@@ -22,7 +23,7 @@ class DbHandler:
             "post_game_state": """INSERT INTO game_state (activePlayer, gameState, game) VALUES (?, ?, ?)""",
             "get_game_state": """SELECT activePlayer, gameState, game FROM game_state ORDER BY id DESC LIMIT 1""",
             "insert_starting_game_state": """INSERT INTO game_state (activePlayer, gameState, game) VALUES (?, ?, ?)""",
-            "insert_mock_game": """INSERT INTO game (white, black) VALUES (?, ?)"""
+            "insert_mock_game": """INSERT INTO game (white, black) VALUES (?, ?)""",
         }
         self.tables = {
             "game_state": """
@@ -73,7 +74,9 @@ class DbHandler:
             self.cursor.execute(self.queries["get_game_state"])
             row = self.cursor.fetchone()
             if not row:
-                raise ValueError("db_handler.get_game_state: row not found in database.")
+                raise ValueError(
+                    "db_handler.get_game_state: row not found in database."
+                )
             return {
                 "message": "Succesfully retrieved game_state row from database",
                 "activePlayer": row[0],
@@ -81,6 +84,7 @@ class DbHandler:
             }
         except Exception as e:
             raise Exception(f"db_handler.get_game_state: Unexpected error: {e}")
+
     # TODO
     # This doesnt need to be here, it doesnt touch the DB. We should probably move some things out of here
     def post_refresh(self, payload):

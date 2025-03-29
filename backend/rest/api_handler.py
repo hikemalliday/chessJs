@@ -23,6 +23,7 @@ class ThreadingHTTPServer(socketserver.ThreadingMixIn, HTTPServer):
 
     pass
 
+
 # TODO Should we be using constructor here?
 class APIHandler(BaseHTTPRequestHandler):
     SECRET = os.getenv("SECRET", None)

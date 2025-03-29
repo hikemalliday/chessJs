@@ -4,4 +4,4 @@ Chess JS
 
 VanillaJS frontend, native python libs for backend.
 
-Building with as little deps as possible. Currently there is only one dep involved with the backend.
+Building with as little deps as possible. Only adding deps when totally needed (JWTs, etc)

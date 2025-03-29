@@ -18,8 +18,8 @@ class DbHandler:
         self.conn = sqlite3.connect("game.db", check_same_thread=False)
         self.cursor = self.conn.cursor()
         self.queries = {
-            "post_signup": """INSERT INTO user (username, hashed_password) VALUES (?, ?)""",
-            "post_login": """SELECT hashed_password FROM user WHERE username = ?""",
+            "post_signup": """INSERT INTO users (username, hashed_password) VALUES (?, ?)""",
+            "post_login": """SELECT hashed_password FROM users WHERE username = ? LIMIT 1""",
             "post_game_state": """INSERT INTO game_state (activePlayer, gameState, game) VALUES (?, ?, ?)""",
             "get_game_state": """SELECT activePlayer, gameState, game FROM game_state ORDER BY id DESC LIMIT 1""",
             "insert_starting_game_state": """INSERT INTO game_state (activePlayer, gameState, game) VALUES (?, ?, ?)""",
@@ -42,8 +42,8 @@ class DbHandler:
         black TEXT NOT NULL
         )
         """,
-            "user": """
-        CREATE TABLE IF NOT EXISTS user (
+            "users": """
+        CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         username TEXT NOT NULL,
         hashed_password TEXT NOT NULL
@@ -122,6 +122,7 @@ class DbHandler:
 
     def post_login(self, payload):
         try:
+            print("post_login debug 1")
             validators.post_login(payload)
             username = payload["username"]
             password = payload["password"]

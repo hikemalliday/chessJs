@@ -5,6 +5,13 @@
   "version": "0.2.0",
   "configurations": [
     {
+      "name": "chessJs backend",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "./backend/main.py",
+      "console": "integratedTerminal"
+    },
+    {
       "type": "chrome",
       "request": "launch",
       "name": "Launch Chrome against localhost",

@@ -59,15 +59,16 @@ class APIHandler(BaseHTTPRequestHandler):
     # TODO:Hide algo in config or env
     def _validate_token(self):
         try:
-            raw_access = self.headers.get("Authorization")
-            if not raw_access:
+            raw_token = self.headers.get("Authorization")
+            if not raw_token:
                 raise AuthenticationError("Missing Authorization header")
-            if not raw_access.startswith("Bearer "):
+            if not raw_token.startswith("Bearer "):
                 raise AuthenticationError("Invalid Authorization header format")
-            access = raw_access.split("Bearer ")[1]
-            return jwt.decode(access, self.SECRET, ["HS256"])
+            token = raw_token.split("Bearer ")[1]
+            decoded = jwt.decode(token, self.SECRET, ["HS256"])
+            return decoded
         except jwt.ExpiredSignatureError as e:
-            raise AuthenticationError(f"ExperimentSignatureError: {e}") from e
+            raise AuthenticationError(f"ExpiredSignatureError: {e}") from e
         except jwt.InvalidTokenError as e:
             raise AuthenticationError(f"InvalidTokenError: {e}") from e
         except Exception as e:

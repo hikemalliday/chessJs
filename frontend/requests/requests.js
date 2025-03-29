@@ -3,9 +3,9 @@ import { setTokens } from "./localStorageHelpers.js";
 
 export async function getGameState() {
   try {
-    //const access = localStorage.getItem("access");
-    const access =
-      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDMyNjkyOTN9.UmRm9QWCUqdDWTwl17Z5alTSamHHNnW3ewY9OQyMTcQ";
+    const access = localStorage.getItem("access");
+    // const access =
+    //   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDMyNjkyOTN9.UmRm9QWCUqdDWTwl17Z5alTSamHHNnW3ewY9OQyMTcQ";
     if (!access) throw new Error("getGameState error: No access token found.");
 
     const response = await fetch(`${BACKEND_URL}/game_state`, {

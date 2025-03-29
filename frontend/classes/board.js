@@ -62,15 +62,15 @@ export class Board {
     this.lastMove = [];
     this.#checkTurn();
     // Debug for jwt
-    // async function testToken() {
-    //   try {
-    //     const data = await getGameState();
-    //     console.log(data);
-    //   } catch (err) {
-    //     console.error(err);
-    //   }
-    // }
-    // testToken();
+    async function testToken() {
+      try {
+        const data = await getGameState();
+        console.log(data);
+      } catch (err) {
+        console.error(err);
+      }
+    }
+    testToken();
   }
 
   async #checkTurn() {

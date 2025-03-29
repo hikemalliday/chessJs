@@ -6,9 +6,6 @@ from logger import logger
 
 
 if __name__ == "__main__":
-    # logger.write_error_log_test(
-    #     "test error log entry",
-    # )
     print(create_jwt({}, os.getenv("SECRET", None), minutes=120))
     db_handler = DbHandler()
     db_handler.create_tables()

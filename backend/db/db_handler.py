@@ -110,8 +110,8 @@ class DbHandler:
             self.conn.commit()
             return {
                 "message": "Account created successfully.",
-                "access": create_jwt({"minutes": 120}, self.SECRET),
-                "refresh": create_jwt({"days": 7}, self.SECRET),
+                "access": create_jwt({}, self.SECRET, **{"minutes": 120}),
+                "refresh": create_jwt({},self.SECRET, **{"days": 7}),
             }
         except sqlite3.IntegrityError as e:
             raise ValueError("Username already exists") from e
@@ -134,8 +134,8 @@ class DbHandler:
             ):
                 return {
                     "message": "Login successful",
-                    "access": create_jwt({"minutes": 120}, self.SECRET),
-                    "refresh": create_jwt({"days": 7}, self.SECRET),
+                    "access": create_jwt({}, self.SECRET, **{"minutes": 120}),
+                    "refresh": create_jwt({}, self.SECRET, **{"days": 7}),
                 }
         except Exception as e:
             raise Exception(f"db_handler.post_login: Unexpected error: {e}") from e

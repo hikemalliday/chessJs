@@ -1,9 +1,9 @@
 export function setTokens(access, refresh) {
-  localStorage.setItem("accessToken", access);
-  localStorage.setItem("refreshToken", refresh);
+  localStorage.setItem("access", access);
+  localStorage.setItem("refresh", refresh);
 }
 
 export function clearTokens() {
-  localStorage.removeItem("accessToken");
-  localStorage.removeItem("refreshToken");
+  localStorage.removeItem("access");
+  localStorage.removeItem("refresh");
 }

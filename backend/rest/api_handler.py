@@ -33,7 +33,6 @@ class APIHandler(BaseHTTPRequestHandler):
     SECRET = os.getenv("SECRET", None)
     db_handler = None
     exempt_verification_routes = ["/login", "/signup"]
-    ip_required_routes = ["/create_game", "/start_game"]
     GET_REQUESTS = {
         "/game_state": get_game_state,
         "/games": get_games,
@@ -129,18 +128,14 @@ class APIHandler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         try:
+            decoded = None
             if self.path not in self.exempt_verification_routes:
-                self._validate_token()
+                decoded = self._validate_token()
             content_length = int(self.headers.get("Content-Length", 0))
             post_data = self.rfile.read(content_length)
             payload = json.loads(post_data.decode("utf-8")) if post_data else {}
-            client_ip = self.client_address[0]
-            if self.path not in self.ip_required_routes:
-                response = self.POST_REQUESTS[self.path](self.db_handler, payload)
-            else:
-                response = self.POST_REQUESTS[self.path](
-                    self.db_handler, payload, ip=client_ip
-                )
+            uuid = decoded["uuid"] if decoded else None
+            response = self.POST_REQUESTS[self.path](self.db_handler, payload, uuid=uuid)
         except KeyError as e:
             logger.write_error_log_test(e)
             return self._handle_err_response("KeyError", e, 404)

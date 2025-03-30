@@ -15,11 +15,15 @@ def get_games(db_handler, query_params, **kwargs):
 
 # POST Requests
 def post_game_state(db_handler, payload, **kwargs):
-    return db_handler.post_game_state(payload, **kwargs)
+    return db_handler.post_game_state(payload, uuid=kwargs.pop("uuid", None), **kwargs)
 
 
 def post_start_game(db_handler, payload, **kwargs):
-    return db_handler.post_game_state(payload, **kwargs)
+    return db_handler.post_game_state(payload, uuid=kwargs.pop("uuid", None), **kwargs)
+
+
+def post_signup(db_handler, payload, **kwargs):
+    return db_handler.post_signup(payload, **kwargs)
 
 
 def post_login(db_handler, payload, **kwargs):
@@ -39,9 +43,5 @@ def post_refresh(_, payload, **kwargs):
     }
 
 
-def post_signup(db_handler, payload, **kwargs):
-    return db_handler.post_signup(payload, **kwargs)
-
-
 def post_create_game(db_handler, payload, **kwargs):
-    return db_handler.post_create_game(payload, **kwargs)
+    return db_handler.post_create_game(payload, uuid=kwargs.pop("uuid", None), **kwargs)

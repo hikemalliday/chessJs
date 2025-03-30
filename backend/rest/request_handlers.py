@@ -5,8 +5,12 @@ from helper import create_jwt, decode_jwt
 
 
 # GET Requests
-def get_game_state(db_handler, **kwargs):
+def get_game_state(db_handler, _, **kwargs):
     return db_handler.get_game_state()
+
+
+def get_games(db_handler, query_params, **kwargs):
+    return db_handler.get_games(query_params)
 
 
 # POST Requests

@@ -17,14 +17,15 @@ class DbHandler:
         self.conn = sqlite3.connect("game.db", check_same_thread=False)
         self.cursor = self.conn.cursor()
         self.queries = {
+            "get_game_state": """SELECT activePlayer, gameState, game FROM game_state ORDER BY id DESC LIMIT 1""",
+            "get_games": """SELECT * FROM game""",
+            "get_created_game_id": """SELECT (id) FROM game WHERE id = ?""",
             "post_signup": """INSERT INTO users (username, hashed_password) VALUES (?, ?)""",
             "post_login": """SELECT hashed_password FROM users WHERE username = ? LIMIT 1""",
             "post_game_state": """INSERT INTO game_state (activePlayer, gameState, game) VALUES (?, ?, ?)""",
-            "get_game_state": """SELECT activePlayer, gameState, game FROM game_state ORDER BY id DESC LIMIT 1""",
             "insert_starting_game_state": """INSERT INTO game_state (activePlayer, gameState, game) VALUES (?, ?, ?)""",
             "insert_mock_game": """INSERT INTO game (white, black) VALUES (?, ?)""",
             "post_create_game": """INSERT INTO game (white) VALUES (?)""",
-            "get_created_game_id": """SELECT (id) FROM game WHERE id = ?""",
         }
         self.tables = {
             "game_state": """
@@ -52,6 +53,16 @@ class DbHandler:
         )
         """,
         }
+
+    def get_query_param_query(self, query, query_params):
+        values = []
+        for i, (k, v) in enumerate(query_params.items()):
+            if i == 0:
+                query += f" WHERE {k} = ?"
+            else:
+                query += f" AND WHERE {k} = ?"
+            values.append(v)
+        return query, tuple(values)
 
     def create_tables(self):
         try:
@@ -88,6 +99,25 @@ class DbHandler:
             raise ValueError(f"db_handler.get_game_state: {e}") from e
         except Exception as e:
             raise Exception(f"db_handler.get_game_state: Unexpected error: {e}") from e
+        
+    def get_games(self, query_params):
+        try:
+            query, values  = self.get_query_param_query(self.queries["get_games"], query_params)
+            self.cursor.execute(query, values)
+            rows = self.cursor.fetchall()
+            print(rows)
+            if not rows:
+                raise ValueError(
+                    "db_handler.get_games: rows not found in database."
+                )
+            return {
+                "message": "Succesfully retrieved game rows from database",
+                "rows": [],
+            }
+        except ValueError as e:
+            raise ValueError(f"db_handler.get_games: {e}") from e
+        except Exception as e:
+            raise Exception(f"db_handler.get_games: Unexpected error: {e}") from e
 
     def post_game_state(self, payload, **kwargs):
         try:

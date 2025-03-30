@@ -1,4 +1,5 @@
 import os
+from urllib.parse import urlparse, parse_qs
 import jwt
 from dotenv import load_dotenv
 import json
@@ -6,6 +7,7 @@ import socketserver
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from rest.request_handlers import (
     get_game_state,
+    get_games,
     post_game_state,
     post_start_game,
     post_login,
@@ -34,6 +36,7 @@ class APIHandler(BaseHTTPRequestHandler):
     ip_required_routes = ["/create_game", "/start_game"]
     GET_REQUESTS = {
         "/game_state": get_game_state,
+        "/games": get_games,
     }
     POST_REQUESTS = {
         "/signup": post_signup,
@@ -93,7 +96,19 @@ class APIHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         try:
             self._validate_token()
-            response = self.GET_REQUESTS[self.path](self.db_handler)
+            # TODO: Abstract this to helper
+            # Parse query params
+            parsed_url = urlparse(self.path)
+            query_params = parse_qs(parsed_url.query)  # Returns a dictionary {key: [value]}
+
+            # Convert list values to single values where applicable
+            query_params = {k: v[0] if len(v) == 1 else v for k, v in query_params.items()}
+
+            # Call the corresponding handler with query parameters
+            if parsed_url.path in self.GET_REQUESTS:
+                response = self.GET_REQUESTS[parsed_url.path](self.db_handler, query_params)
+            else:
+                raise KeyError(f"Invalid endpoint: {parsed_url.path}")
         except KeyError as e:
             logger.write_error_log_test(e)
             return self._handle_err_response("KeyError", e, 404)

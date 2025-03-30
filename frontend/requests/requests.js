@@ -21,6 +21,27 @@ export async function getGameState() {
   }
 }
 
+export async function getGames(params) {
+  try {
+    const access = localStorage.getItem("access");
+    if (!access) throw new Error("getGameState error: No access token found.");
+    const url = new URL(`${BACKEND_URL}/games`);
+    Object.keys(params).forEach((key) =>
+      url.searchParams.append(key, params[key])
+    );
+    const response = await fetch(url, {
+      headers: { "X-API-Key": API_KEY, Authorization: `Bearer ${access}` },
+    });
+
+    if (!response.ok)
+      throw new Error(`getGames http error: Status: ${response.status}`);
+
+    return await response.json();
+  } catch (error) {
+    throw new Error(`getGames error: ${error}`);
+  }
+}
+
 export async function postGameState(payload) {
   try {
     const access = localStorage.getItem("access");

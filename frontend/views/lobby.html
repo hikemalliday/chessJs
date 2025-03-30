@@ -6,15 +6,18 @@
     <title>Lobby</title>
     <link rel="stylesheet" href="../styles/lobby.css" />
     <button id="create-game-button">Create Game</button>
+    <button id="get-games-test">Get Games Test</button>
   </head>
   <body>
     <script type="module">
-      import { postCreateGame } from "../requests/requests.js";
+      import { postCreateGame, getGames } from "../requests/requests.js";
       document.getElementById("create-game-button").onclick =
         async function () {
-          console.log("CREATE GAME BUTTON CLICK");
           await postCreateGame();
         };
+      document.getElementById("get-games-test").onclick = async function () {
+        await getGames({ is_started: 0 });
+      };
     </script>
   </body>
 </html>

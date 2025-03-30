@@ -4,7 +4,6 @@ from backend.db.validators import (
     post_login,
     post_signup,
     post_game_state,
-    post_create_game,
 )
 from contextlib import contextmanager
 
@@ -29,7 +28,6 @@ class TestValidators:
     INVALID_GAME_STATE_TOP_LEVEL = []
     INVALID_GAME_STATE_CHILD_LEVEL = [[], [], [], [], [], [], [], []]
 
-    # validators.post_refresh
     def test_post_refresh_valid_payload(self):
         payload = {"refresh": "refresh-token"}
         with does_not_raise():

@@ -1,4 +1,5 @@
 import os
+from uuid import uuid4
 from dotenv import load_dotenv
 import sqlite3
 import json
@@ -20,8 +21,8 @@ class DbHandler:
             "get_game_state": """SELECT activePlayer, gameState, game FROM game_state ORDER BY id DESC LIMIT 1""",
             "get_games": """SELECT * FROM game""",
             "get_created_game_id": """SELECT (id) FROM game WHERE id = ?""",
-            "post_signup": """INSERT INTO users (username, hashed_password) VALUES (?, ?)""",
-            "post_login": """SELECT hashed_password FROM users WHERE username = ? LIMIT 1""",
+            "post_signup": """INSERT INTO users (username, hashed_password, uuid) VALUES (?, ?, ?)""",
+            "post_login": """SELECT hashed_password, uuid FROM users WHERE username = ? LIMIT 1""",
             "post_game_state": """INSERT INTO game_state (activePlayer, gameState, game) VALUES (?, ?, ?)""",
             "insert_starting_game_state": """INSERT INTO game_state (activePlayer, gameState, game) VALUES (?, ?, ?)""",
             "insert_mock_game": """INSERT INTO game (white, black) VALUES (?, ?)""",
@@ -40,16 +41,17 @@ class DbHandler:
             "game": """
         CREATE TABLE IF NOT EXISTS game (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        white TEXT NOT NULL,
-        black TEXT,
+        white INTEGER NOT NULL,
+        black INTEGER,
         is_started INTEGER NOT NULL CHECK (is_started IN (0, 1)) DEFAULT 0
         )
         """,
             "users": """
         CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        username TEXT NOT NULL,
-        hashed_password TEXT NOT NULL
+        username TEXT NOT NULL UNIQUE,
+        hashed_password TEXT NOT NULL,
+        uuid TEXT NOT NULL
         )
         """,
         }
@@ -141,17 +143,18 @@ class DbHandler:
             validators.post_signup(payload)
             username = payload["username"]
             hashed_password = hash_password(payload["password"])
+            uuid = str(uuid4())
             self.cursor.execute(
-                self.queries["post_signup"], (username, hashed_password)
+                self.queries["post_signup"], (username, hashed_password, uuid)
             )
             self.conn.commit()
             return {
                 "message": "Account created successfully.",
-                "access": create_jwt({}, self.SECRET, **{"minutes": 120}),
-                "refresh": create_jwt({}, self.SECRET, **{"days": 7}),
+                "access": create_jwt({"uuid": uuid}, self.SECRET, **{"minutes": 120}),
+                "refresh": create_jwt({"uuid": uuid}, self.SECRET, **{"days": 7}),
             }
         except sqlite3.IntegrityError as e:
-            raise ValueError("Username already exists") from e
+            raise ValueError("db_handler.post_signup: Username already exists") from e
         except ValueError as e:
             raise ValueError(f"db_handler.post_signup: {e}") from e
         except Exception as e:
@@ -168,13 +171,15 @@ class DbHandler:
                 raise ValueError("db_handler.post_login: Invalid username or password")
 
             stored_hashed_password = result[0]
+            uuid = result[1]
+
             if bcrypt.checkpw(
                 password.encode("utf-8"), stored_hashed_password.encode("utf-8")
             ):
                 return {
                     "message": "Login successful",
-                    "access": create_jwt({}, self.SECRET, **{"minutes": 120}),
-                    "refresh": create_jwt({}, self.SECRET, **{"days": 7}),
+                    "access": create_jwt({"uuid": uuid}, self.SECRET, **{"minutes": 120}),
+                    "refresh": create_jwt({"uuid": uuid}, self.SECRET, **{"days": 7}),
                 }
         except ValueError as e:
             raise ValueError(f"db_handler.post_login: {e}") from e
@@ -183,7 +188,6 @@ class DbHandler:
 
     def post_create_game(self, _, **kwargs):
         try:
-            # validators.post_create_game(payload)
             white_ip = kwargs.get("ip", None)
             self.cursor.execute(self.queries["post_create_game"], (white_ip,))
             self.conn.commit()

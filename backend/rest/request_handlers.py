@@ -29,9 +29,10 @@ def post_login(db_handler, payload, **kwargs):
 def post_refresh(_, payload, **kwargs):
     validators.post_refresh(payload)
     refresh = payload["refresh"]
-    if not decode_jwt(refresh):
+    decoded = decode_jwt(refresh)
+    if not decoded:
         raise AuthenticationError("post_refresh: Invalid refresh token.")
-    return {"access": create_jwt({}, os.getenv("SECRET", None), {"minutes": 120})}
+    return {"access": create_jwt({"uuid": decoded["uuid"]}, os.getenv("SECRET", None), {"minutes": 120})}
 
 
 def post_signup(db_handler, payload, **kwargs):

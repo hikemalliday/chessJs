@@ -202,5 +202,3 @@ class TestValidators:
             match="Invalid post_game_state payload: 'gameState' elements must have len == 8",
         ):
             post_game_state(payload)
-
-

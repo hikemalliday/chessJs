@@ -153,7 +153,7 @@ class DbHandler:
 
     def post_create_game(self, _, **kwargs):
         try:
-            #validators.post_create_game(payload)
+            # validators.post_create_game(payload)
             white_ip = kwargs.get("ip", None)
             self.cursor.execute(self.queries["post_create_game"], (white_ip,))
             self.conn.commit()

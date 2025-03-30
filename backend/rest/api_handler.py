@@ -82,13 +82,26 @@ class APIHandler(BaseHTTPRequestHandler):
             raise Exception(f"_validate_token: Unexpected error: {e}") from e
 
     def _handle_err_response(self, err_type, exc, status_code):
-        response = {"message": f"{err_type}: {exc}"}
-        self._set_headers(status=status_code)
-        self.wfile.write(json.dumps(response).encode("utf-8"))
+        try:
+            response = {"message": f"{err_type}: {exc}"}
+            self._set_headers(status=status_code)
+            self.wfile.write(json.dumps(response).encode("utf-8"))
+        except Exception as e:
+            raise Exception(f"_handle_err_response: Unexpected error: {e}") from e
 
     def _handle_success_response(self, response):
-        self._set_headers()
-        self.wfile.write(json.dumps(response).encode("utf-8"))
+        try:
+            self._set_headers()
+            self.wfile.write(json.dumps(response).encode("utf-8"))
+        except Exception as e:
+            raise Exception(f"_handle_success_response: Unexpected error: {e}") from e
+
+    def _get_query_params(self, parsed_url):
+        try:
+            query_params = parse_qs(parsed_url.query)
+            return {k: v[0] if len(v) == 1 else v for k, v in query_params.items()}
+        except Exception as e:
+            raise Exception(f"_get_query_params: Unexpected error: {e}") from e
 
     def do_OPTIONS(self):
         self._set_headers()
@@ -96,19 +109,13 @@ class APIHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         try:
             self._validate_token()
-            # TODO: Abstract this to helper
-            # Parse query params
             parsed_url = urlparse(self.path)
-            query_params = parse_qs(parsed_url.query)  # Returns a dictionary {key: [value]}
-
-            # Convert list values to single values where applicable
-            query_params = {k: v[0] if len(v) == 1 else v for k, v in query_params.items()}
-
-            # Call the corresponding handler with query parameters
             if parsed_url.path in self.GET_REQUESTS:
-                response = self.GET_REQUESTS[parsed_url.path](self.db_handler, query_params)
+                response = self.GET_REQUESTS[parsed_url.path](
+                    self.db_handler, self._get_query_params(parsed_url)
+                )
             else:
-                raise KeyError(f"Invalid endpoint: {parsed_url.path}")
+                raise KeyError(f"Invalid endpoint: {self.path}")
         except KeyError as e:
             logger.write_error_log_test(e)
             return self._handle_err_response("KeyError", e, 404)

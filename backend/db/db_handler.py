@@ -99,17 +99,17 @@ class DbHandler:
             raise ValueError(f"db_handler.get_game_state: {e}") from e
         except Exception as e:
             raise Exception(f"db_handler.get_game_state: Unexpected error: {e}") from e
-        
+
     def get_games(self, query_params):
         try:
-            query, values  = self.get_query_param_query(self.queries["get_games"], query_params)
+            query, values = self.get_query_param_query(
+                self.queries["get_games"], query_params
+            )
             self.cursor.execute(query, values)
             rows = self.cursor.fetchall()
             print(rows)
             if not rows:
-                raise ValueError(
-                    "db_handler.get_games: rows not found in database."
-                )
+                raise ValueError("db_handler.get_games: rows not found in database.")
             return {
                 "message": "Succesfully retrieved game rows from database",
                 "rows": [],

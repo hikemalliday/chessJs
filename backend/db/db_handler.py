@@ -40,7 +40,7 @@ class DbHandler:
         CREATE TABLE IF NOT EXISTS game (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         white TEXT NOT NULL,
-        black TEXT NOT NULL,
+        black TEXT,
         is_started INTEGER NOT NULL CHECK (is_started IN (0, 1)) DEFAULT 0
         )
         """,
@@ -151,9 +151,9 @@ class DbHandler:
         except Exception as e:
             raise Exception(f"db_handler.post_login: Unexpected error: {e}") from e
 
-    def post_create_game(self, payload, **kwargs):
+    def post_create_game(self, _, **kwargs):
         try:
-            validators.post_create_game(payload)
+            #validators.post_create_game(payload)
             white_ip = kwargs.get("ip", None)
             self.cursor.execute(self.queries["post_create_game"], (white_ip,))
             self.conn.commit()

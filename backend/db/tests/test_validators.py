@@ -203,29 +203,4 @@ class TestValidators:
         ):
             post_game_state(payload)
 
-    def test_post_create_game_not_dict(self):
-        payload = ["not_a_dict"]
-        with pytest.raises(
-            ValueError, match="Invalid post_create_game payload: must be a dict"
-        ):
-            post_create_game(payload)
 
-    def test_post_game_create_wrong_key_len(self):
-        payload = {
-            "white": "test-ip",
-            "extra-key": "extra-val",
-        }
-        with pytest.raises(
-            ValueError, match="Invalid post_create_game payload: invalid amount of keys"
-        ):
-            post_create_game(payload)
-
-    def test_post_create_game_no_white_key(self):
-        payload = {
-            "not-white-key": "mock-val",
-        }
-        with pytest.raises(
-            ValueError,
-            match="Invalid post_create_game payload: must contain 'white' key",
-        ):
-            post_create_game(payload)

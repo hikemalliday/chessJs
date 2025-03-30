@@ -4,9 +4,17 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Lobby</title>
-    <link rel="stylesheet" href="../styles.css" />
+    <link rel="stylesheet" href="../styles/lobby.css" />
+    <button id="create-game-button">Create Game</button>
   </head>
   <body>
-    <script src="main.js" type="module"></script>
+    <script type="module">
+      import { postCreateGame } from "../requests/requests.js";
+      document.getElementById("create-game-button").onclick =
+        async function () {
+          console.log("CREATE GAME BUTTON CLICK");
+          await postCreateGame();
+        };
+    </script>
   </body>
 </html>

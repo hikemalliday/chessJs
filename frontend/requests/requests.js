@@ -112,10 +112,13 @@ export async function postLogin(payload) {
 
 export async function postCreateGame() {
   try {
+    const access = localStorage.getItem("access");
+    if (!access) throw new Error("postGameState error: No access token found.");
+
     const response = await fetch(`${BACKEND_URL}/create_game`, {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
+        Authorization: `Bearer ${access}`,
       },
     });
 

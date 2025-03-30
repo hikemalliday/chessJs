@@ -5,24 +5,24 @@ from helper import create_jwt, decode_jwt
 
 
 # GET Requests
-def get_game_state(db_handler):
+def get_game_state(db_handler, **kwargs):
     return db_handler.get_game_state()
 
 
 # POST Requests
-def post_game_state(db_handler, payload):
-    return db_handler.post_game_state(payload)
+def post_game_state(db_handler, payload, **kwargs):
+    return db_handler.post_game_state(payload, **kwargs)
 
 
-def post_start_game(db_handler, payload):
-    return db_handler.post_game_state(payload)
+def post_start_game(db_handler, payload, **kwargs):
+    return db_handler.post_game_state(payload, **kwargs)
 
 
-def post_login(db_handler, payload):
-    return db_handler.post_login(payload)
+def post_login(db_handler, payload, **kwargs):
+    return db_handler.post_login(payload, **kwargs)
 
 
-def post_refresh(_, payload):
+def post_refresh(_, payload, **kwargs):
     validators.post_refresh(payload)
     refresh = payload["refresh"]
     if not decode_jwt(refresh):
@@ -30,9 +30,9 @@ def post_refresh(_, payload):
     return {"access": create_jwt({}, os.getenv("SECRET", None), {"minutes": 120})}
 
 
-def post_signup(db_handler, payload):
-    return db_handler.post_signup(payload)
+def post_signup(db_handler, payload, **kwargs):
+    return db_handler.post_signup(payload, **kwargs)
 
 
-def post_create_game(db_handler, payload):
-    return db_handler.post_create_game(payload)
+def post_create_game(db_handler, payload, **kwargs):
+    return db_handler.post_create_game(payload, **kwargs)

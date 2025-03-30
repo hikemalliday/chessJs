@@ -62,10 +62,3 @@ def post_game_state(payload):
     _validate_game_state_object(payload["gameState"])
 
 
-def post_create_game(payload):
-    if not isinstance(payload, dict):
-        raise ValueError("Invalid post_create_game payload: must be a dict")
-    if not (len(payload.keys()) == 1):
-        raise ValueError("Invalid post_create_game payload: invalid amount of keys")
-    if not "white" in payload:
-        raise ValueError("Invalid post_create_game payload: must contain 'white' key")

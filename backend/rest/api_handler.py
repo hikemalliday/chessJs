@@ -111,12 +111,13 @@ class APIHandler(BaseHTTPRequestHandler):
                 self._validate_token()
             content_length = int(self.headers.get("Content-Length", 0))
             post_data = self.rfile.read(content_length)
-            payload = json.loads(post_data.decode("utf-8"))
-            if self.path not in self.ip_requried_routes:
+            payload = json.loads(post_data.decode("utf-8")) if post_data else {}
+            client_ip = self.client_address[0] 
+            if self.path not in self.ip_required_routes:
                 response = self.POST_REQUESTS[self.path](self.db_handler, payload)
             else:
                 response = self.POST_REQUESTS[self.path](
-                    self.db_handler, payload, ip=self.client_address[0]
+                    self.db_handler, payload, ip=client_ip
                 )
         except KeyError as e:
             logger.write_error_log_test(e)

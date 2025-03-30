@@ -112,7 +112,7 @@ class DbHandler:
                 raise ValueError("db_handler.get_games: rows not found in database.")
             return {
                 "message": "Succesfully retrieved game rows from database",
-                "rows": [],
+                "rows": rows,
             }
         except ValueError as e:
             raise ValueError(f"db_handler.get_games: {e}") from e

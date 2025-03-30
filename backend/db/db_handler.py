@@ -178,7 +178,9 @@ class DbHandler:
             ):
                 return {
                     "message": "Login successful",
-                    "access": create_jwt({"uuid": uuid}, self.SECRET, **{"minutes": 120}),
+                    "access": create_jwt(
+                        {"uuid": uuid}, self.SECRET, **{"minutes": 120}
+                    ),
                     "refresh": create_jwt({"uuid": uuid}, self.SECRET, **{"days": 7}),
                 }
         except ValueError as e:

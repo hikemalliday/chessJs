@@ -17,6 +17,15 @@
       "name": "Launch Chrome against localhost",
       "url": "http://localhost:8000",
       "webRoot": "${workspaceFolder}"
+    },
+    {
+      "name": "Debug Db Tests",
+      "type": "python",
+      "request": "launch",
+      "module": "pytest",
+      "args": ["backend/db/tests"],
+      "justMyCode": false,
+      "cwd": "${workspaceFolder}"
     }
   ]
 }

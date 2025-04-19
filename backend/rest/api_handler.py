@@ -107,11 +107,12 @@ class APIHandler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         try:
-            self._validate_token()
+            decoded = self._validate_token()
+            uuid = decoded.get("uuid", None)
             parsed_url = urlparse(self.path)
             if parsed_url.path in self.GET_REQUESTS:
                 response = self.GET_REQUESTS[parsed_url.path](
-                    self.db_handler, self._get_query_params(parsed_url)
+                    self.db_handler, self._get_query_params(parsed_url), uuid=uuid
                 )
             else:
                 raise KeyError(f"Invalid endpoint: {self.path}")
@@ -129,13 +130,16 @@ class APIHandler(BaseHTTPRequestHandler):
     def do_POST(self):
         try:
             decoded = None
+            uuid = None
             if self.path not in self.exempt_verification_routes:
                 decoded = self._validate_token()
+                uuid = decoded.get("uuid", None)
             content_length = int(self.headers.get("Content-Length", 0))
             post_data = self.rfile.read(content_length)
             payload = json.loads(post_data.decode("utf-8")) if post_data else {}
-            uuid = decoded["uuid"] if decoded else None
-            response = self.POST_REQUESTS[self.path](self.db_handler, payload, uuid=uuid)
+            response = self.POST_REQUESTS[self.path](
+                self.db_handler, payload, uuid=uuid
+            )
         except KeyError as e:
             logger.write_error_log_test(e)
             return self._handle_err_response("KeyError", e, 404)

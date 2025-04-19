@@ -4,9 +4,12 @@ from dotenv import load_dotenv
 import sqlite3
 import json
 import bcrypt
-import db.validators as validators
+from db import validators
 from db.mock_data import starting_game_state
 from helper import create_jwt, hash_password
+from .queries import queries
+from . import serializers
+
 
 load_dotenv()
 
@@ -17,18 +20,9 @@ class DbHandler:
         self.SECRET = os.getenv("SECRET", None)
         self.conn = sqlite3.connect("game.db", check_same_thread=False)
         self.cursor = self.conn.cursor()
-        self.queries = {
-            "get_game_state": """SELECT activePlayer, gameState, game FROM game_state ORDER BY id DESC LIMIT 1""",
-            "get_games": """SELECT * FROM game""",
-            "get_created_game_id": """SELECT (id) FROM game WHERE id = ?""",
-            "post_signup": """INSERT INTO users (username, hashed_password, uuid) VALUES (?, ?, ?)""",
-            "post_login": """SELECT hashed_password, uuid FROM users WHERE username = ? LIMIT 1""",
-            "post_game_state": """INSERT INTO game_state (activePlayer, gameState, game) VALUES (?, ?, ?)""",
-            "insert_starting_game_state": """INSERT INTO game_state (activePlayer, gameState, game) VALUES (?, ?, ?)""",
-            "insert_mock_game": """INSERT INTO game (white, black) VALUES (?, ?)""",
-            "post_create_game": """INSERT INTO game (white) VALUES (?)""",
-        }
+        self.queries = queries
         self.tables = {
+            # Active player could be either user id or just 'white' / 'black'
             "game_state": """
         CREATE TABLE IF NOT EXISTS game_state (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -38,12 +32,17 @@ class DbHandler:
         FOREIGN KEY (game) REFERENCES game(id) ON DELETE CASCADE
         )
         """,
+            # In the 'game' table, I think that 'white' and 'black' should be ID's that correspond to a user. This would require that if anyone wants to play they must sign up,
+            # not sure how we would handle guests. I guess that guest coTestuld just auto create a user. User ID could be stored in tokens
             "game": """
         CREATE TABLE IF NOT EXISTS game (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        white INTEGER NOT NULL,
-        black INTEGER,
-        is_started INTEGER NOT NULL CHECK (is_started IN (0, 1)) DEFAULT 0
+        white TEXT,
+        black TEXT,
+        is_started INTEGER NOT NULL CHECK (is_started IN (0, 1)) DEFAULT 0,
+        uuid TEXT NOT NULL,
+        FOREIGN KEY (white) REFERENCES users(id) ON DELETE CASCADE,
+        FOREIGN KEY (black) REFERENCES users(id) ON DELETE CASCADE
         )
         """,
             "users": """
@@ -56,7 +55,7 @@ class DbHandler:
         """,
         }
 
-    def get_query_param_query(self, query, query_params):
+    def _get_query_param_query(self, query, query_params):
         values = []
         for i, (k, v) in enumerate(query_params.items()):
             if i == 0:
@@ -75,7 +74,7 @@ class DbHandler:
             print(f"ERROR: Could not create table: {e}")
 
     def insert_mock_game(self):
-        values = ("white-player", "black-player")
+        values = ("white-player", "black-player", "mock-uuid")
         self.cursor.execute(self.queries["insert_mock_game"], values)
         self.conn.commit()
 
@@ -84,19 +83,17 @@ class DbHandler:
         self.cursor.execute(self.queries["insert_starting_game_state"], values)
         self.conn.commit()
 
-    def get_game_state(self):
+    def get_game_state(self, uuid=None):
         try:
-            self.cursor.execute(self.queries["get_game_state"])
-            row = self.cursor.fetchone()
-            if not row:
+            self.cursor.execute(self.queries["get_game_state"], (uuid,))
+            game_state_row = self.cursor.fetchone()
+            if not game_state_row:
                 raise ValueError(
                     "db_handler.get_game_state: row not found in database."
                 )
-            return {
-                "message": "Succesfully retrieved game_state row from database",
-                "activePlayer": row[0],
-                "gameState": json.loads(row[1]),
-            }
+            return serializers.GameStateSerializer(
+                query_response=game_state_row
+            ).serialize_data()
         except ValueError as e:
             raise ValueError(f"db_handler.get_game_state: {e}") from e
         except Exception as e:
@@ -104,23 +101,23 @@ class DbHandler:
 
     def get_games(self, query_params):
         try:
-            query, values = self.get_query_param_query(
+            query, values = self._get_query_param_query(
                 self.queries["get_games"], query_params
             )
             self.cursor.execute(query, values)
             rows = self.cursor.fetchall()
-            print(rows)
             if not rows:
                 raise ValueError("db_handler.get_games: rows not found in database.")
-            return {
-                "message": "Succesfully retrieved game rows from database",
-                "rows": rows,
-            }
+            return serializers.GameSerializer(
+                query_response=rows, many=True
+            ).serialize_data()
         except ValueError as e:
             raise ValueError(f"db_handler.get_games: {e}") from e
         except Exception as e:
             raise Exception(f"db_handler.get_games: Unexpected error: {e}") from e
-
+        
+    # Not sure if we need to do this here, but we need to insert the game id for each entry here
+    # We should prolly select the correct game from uuid and get the ID that way, to preserve data integrity
     def post_game_state(self, payload, **kwargs):
         try:
             validators.post_game_state(payload)
@@ -188,16 +185,17 @@ class DbHandler:
         except Exception as e:
             raise Exception(f"db_handler.post_login: Unexpected error: {e}") from e
 
-    def post_create_game(self, _, **kwargs):
+    def post_create_game(self, _, uuid=None, **kwargs):
+        # UUID arg here represents the user creating the game
         try:
-            white_ip = kwargs.get("ip", None)
-            self.cursor.execute(self.queries["post_create_game"], (white_ip,))
+            game_uuid = str(uuid4())
+            self.cursor.execute(self.queries["post_create_game"], (uuid, game_uuid))
             self.conn.commit()
             game_id = self.cursor.lastrowid
-            return {
-                "message": "Game created successfully",
-                "game_id": game_id,
-            }
+            game = self.cursor.execute(
+                self.queries["get_game_from_id"], (game_id,)
+            ).fetchone()
+            return serializers.GameSerializer(query_response=game).serialize_data()
         except ValueError as e:
             raise ValueError(f"db_handler.post_create_game: {e}") from e
         except Exception as e:

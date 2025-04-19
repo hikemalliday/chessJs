@@ -1,6 +1,8 @@
+from uuid import uuid4
 import pytest
 import sqlite3
 from backend.db.db_handler import DbHandler
+import json
 
 
 @pytest.fixture
@@ -16,11 +18,32 @@ def db_handler(tmp_path):
     db.conn = sqlite3.connect(":memory:", check_same_thread=False)
     db.cursor = db.conn.cursor()
     db.create_tables()
+    db.cursor.execute(
+        """INSERT INTO users (username, hashed_password, uuid) VALUES (?, ?, ?)""",
+        ("mock-user", "mock-pw", str(uuid4())),
+    )
     yield db
     db.conn.close()
 
 
 class TestDbHandler:
+    VALID_GAME_STATE = [
+        [None, None, None, None, None, None, None, None],
+        [None, None, None, None, None, None, None, None],
+        [None, None, None, None, None, None, None, None],
+        [None, None, None, None, None, None, None, None],
+        [None, None, None, None, None, None, None, None],
+        [None, None, None, None, None, None, None, None],
+        [None, None, None, None, None, None, None, None],
+        [None, None, None, None, None, None, None, None],
+    ]
+
+    mock_queries = {
+        "insert_mock_game": """INSERT INTO game (white, uuid) VALUES (?, ?)""",
+        "insert_starting_game_state": """INSERT INTO game_state (activePlayer, gameState, game) VALUES (?, ?, ?)""",
+        "get_uuid_from_user_id": """SELECT (uuid) FROM users WHERE id = ?""",
+    }
+
     def test_create_tables(self, db_handler):
         for table_name in db_handler.tables.keys():
             db_handler.cursor.execute(
@@ -60,3 +83,27 @@ class TestDbHandler:
         assert response["message"] == "Login successful"
         assert "refresh" in response
         assert "access" in response
+
+    def test_post_create_game(self, db_handler):
+        db = db_handler
+        uuid = str((uuid4()))
+        db.post_create_game({}, uuid=uuid)
+
+    # Consider having the post return a regular response via serializer
+    def test_get_game_state(self, db_handler):
+        db = db_handler
+        uuid = str(uuid4())
+        game_response = db.post_create_game({}, uuid=uuid)
+        db.cursor.execute(
+            self.mock_queries["insert_starting_game_state"],
+            ("white", json.dumps(self.VALID_GAME_STATE), 1),
+        )
+        game_state = db.get_game_state(uuid=game_response["uuid"])
+        assert game_state["game"] == game_response["id"]
+
+    def test_get_games(self, db_handler):
+        db = db_handler
+        uuid = str(uuid4())
+        game_response = db.post_create_game({}, uuid=uuid)
+        games = db.get_games({"is_started": 0})
+        assert game_response["uuid"] == games[0]["uuid"]

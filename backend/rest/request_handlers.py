@@ -6,7 +6,7 @@ from helper import create_jwt, decode_jwt
 
 # GET Requests
 def get_game_state(db_handler, _, **kwargs):
-    return db_handler.get_game_state()
+    return db_handler.get_game_state(uuid=kwargs.pop("uuid", None), **kwargs)
 
 
 def get_games(db_handler, query_params, **kwargs):

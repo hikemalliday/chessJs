@@ -54,10 +54,13 @@ class TestDbHandler:
             ), f"Table {table_name} was not created"
 
     def test_post_game_state(self, db_handler):
+        db = db_handler
+        uuid = str(uuid4())
+        game_response = db.post_create_game({"uuid": uuid})
         payload = {
             "activePlayer": "white",
             "gameState": [[None for _ in range(8)] for _ in range(8)],
-            "game": 1,
+            "uuid": game_response["uuid"],
         }
         response = db_handler.post_game_state(payload)
         assert response["message"] == "Successfully inserted into 'game_state' table."
@@ -87,13 +90,12 @@ class TestDbHandler:
     def test_post_create_game(self, db_handler):
         db = db_handler
         uuid = str((uuid4()))
-        db.post_create_game({}, uuid=uuid)
+        db.post_create_game({"uuid": uuid})
 
-    # Consider having the post return a regular response via serializer
     def test_get_game_state(self, db_handler):
         db = db_handler
         uuid = str(uuid4())
-        game_response = db.post_create_game({}, uuid=uuid)
+        game_response = db.post_create_game({"uuid": uuid})
         db.cursor.execute(
             self.mock_queries["insert_starting_game_state"],
             ("white", json.dumps(self.VALID_GAME_STATE), 1),
@@ -104,6 +106,6 @@ class TestDbHandler:
     def test_get_games(self, db_handler):
         db = db_handler
         uuid = str(uuid4())
-        game_response = db.post_create_game({}, uuid=uuid)
+        game_response = db.post_create_game({"uuid": uuid})
         games = db.get_games({"is_started": 0})
         assert game_response["uuid"] == games[0]["uuid"]

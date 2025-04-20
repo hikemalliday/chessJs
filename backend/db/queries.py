@@ -7,6 +7,7 @@ queries = {
     "get_game_state": """SELECT * FROM game_state where game = (SELECT id FROM game WHERE uuid = ?)""",
     "get_games": """SELECT * FROM game""",
     "get_game_from_id": """SELECT * FROM game WHERE id = ?""",
+    "get_game_from_uuid": """SELECT * FROM game WHERE uuid = ?""",
     "get_user_id_from_uuid": """SELECT id FROM users WHERE uuid = ?""",
     "post_signup": """INSERT INTO users (username, hashed_password, uuid) VALUES (?, ?, ?)""",
     "post_login": """SELECT hashed_password, uuid FROM users WHERE username = ? LIMIT 1""",

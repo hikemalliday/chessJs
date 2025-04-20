@@ -10,6 +10,7 @@ from helper import create_jwt, hash_password
 from .queries import queries
 from .tables import tables
 from . import serializers
+from .helpers import _get_query_param_query, _post_signup_response, _post_login_response
 
 
 load_dotenv()
@@ -23,16 +24,6 @@ class DbHandler:
         self.cursor = self.conn.cursor()
         self.queries = queries
         self.tables = tables
-
-    def _get_query_param_query(self, query, query_params):
-        values = []
-        for i, (k, v) in enumerate(query_params.items()):
-            if i == 0:
-                query += f" WHERE {k} = ?"
-            else:
-                query += f" AND WHERE {k} = ?"
-            values.append(v)
-        return query, tuple(values)
 
     def create_tables(self):
         try:
@@ -70,7 +61,7 @@ class DbHandler:
 
     def get_games(self, query_params):
         try:
-            query, values = self._get_query_param_query(
+            query, values = _get_query_param_query(
                 self.queries["get_games"], query_params
             )
             self.cursor.execute(query, values)
@@ -85,17 +76,20 @@ class DbHandler:
         except Exception as e:
             raise Exception(f"db_handler.get_games: Unexpected error: {e}") from e
 
-    # Not sure if we need to do this here, but we need to insert the game id for each entry here
-    # We should prolly select the correct game from uuid and get the ID that way, to preserve data integrity
     def post_game_state(self, payload, **kwargs):
         try:
             validators.post_game_state(payload)
+            game = self.cursor.execute(
+                self.queries["get_game_from_uuid"], (payload["uuid"],)
+            ).fetchone()
+            serialized_game = serializers.GameSerializer(
+                query_response=game
+            ).serialize_data()
             active_player = payload["activePlayer"]
             game_state = payload["gameState"]
-            game = payload["game"]
             self.cursor.execute(
                 self.queries["post_game_state"],
-                (active_player, json.dumps(game_state), game),
+                (active_player, json.dumps(game_state), serialized_game["id"]),
             )
             self.conn.commit()
             return {"message": "Successfully inserted into 'game_state' table."}
@@ -114,11 +108,7 @@ class DbHandler:
                 self.queries["post_signup"], (username, hashed_password, uuid)
             )
             self.conn.commit()
-            return {
-                "message": "Account created successfully.",
-                "access": create_jwt({"uuid": uuid}, self.SECRET, **{"minutes": 120}),
-                "refresh": create_jwt({"uuid": uuid}, self.SECRET, **{"days": 7}),
-            }
+            return _post_signup_response(uuid, self.SECRET)
         except sqlite3.IntegrityError as e:
             raise ValueError("db_handler.post_signup: Username already exists") from e
         except ValueError as e:
@@ -142,23 +132,21 @@ class DbHandler:
             if bcrypt.checkpw(
                 password.encode("utf-8"), stored_hashed_password.encode("utf-8")
             ):
-                return {
-                    "message": "Login successful",
-                    "access": create_jwt(
-                        {"uuid": uuid}, self.SECRET, **{"minutes": 120}
-                    ),
-                    "refresh": create_jwt({"uuid": uuid}, self.SECRET, **{"days": 7}),
-                }
+                return _post_login_response(uuid, self.SECRET)
         except ValueError as e:
             raise ValueError(f"db_handler.post_login: {e}") from e
         except Exception as e:
             raise Exception(f"db_handler.post_login: Unexpected error: {e}") from e
 
-    def post_create_game(self, _, uuid=None, **kwargs):
+    def post_create_game(self, payload, **kwargs):
+        # Should this exist in a payload instead? I think so...
         # UUID arg here represents the user creating the game
         try:
+            validators.post_create_game(payload)
             game_uuid = str(uuid4())
-            self.cursor.execute(self.queries["post_create_game"], (uuid, game_uuid))
+            self.cursor.execute(
+                self.queries["post_create_game"], (payload["uuid"], game_uuid)
+            )
             self.conn.commit()
             game_id = self.cursor.lastrowid
             game = self.cursor.execute(

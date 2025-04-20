@@ -1,6 +1,3 @@
-import json
-
-
 def _validate_game_state_object(game_state):
     if len(game_state) != 8:
         raise ValueError(
@@ -57,6 +54,15 @@ def post_game_state(payload):
         raise ValueError(
             "Invalid post_game_state payload: must contain 'gameState' key"
         )
-    if not "game" in payload:
-        raise ValueError("Invalid post_game_state payload: must contain 'game' key")
+    if not "uuid" in payload:
+        raise ValueError("Invalid post_game_state payload: must contain 'uuid' key")
     _validate_game_state_object(payload["gameState"])
+
+
+def post_create_game(payload):
+    if not isinstance(payload, dict):
+        raise ValueError("Invalid post_create_game payload: must be a dict")
+    if not (len(payload.keys()) == 1):
+        raise ValueError("Invalid post_create_game payload: invalid amount of keys")
+    if not "uuid" in payload:
+        raise ValueError("Invalid post_create_game payload: must contain 'uuid' key")

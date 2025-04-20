@@ -4,6 +4,7 @@ from backend.db.validators import (
     post_login,
     post_signup,
     post_game_state,
+    post_create_game,
 )
 from contextlib import contextmanager
 
@@ -200,3 +201,28 @@ class TestValidators:
             match="Invalid post_game_state payload: 'gameState' elements must have len == 8",
         ):
             post_game_state(payload)
+
+    def test_post_create_game_not_dict(self):
+        payload = ["not_a_dict"]
+        with pytest.raises(
+            ValueError, match="Invalid post_create_game payload: must be a dict"
+        ):
+            post_create_game(payload)
+
+    def test_post_create_game_wrong_key_len(self):
+        payload = {
+            "uuid": "test-uuid",
+            "extra-key": "dummy-val",
+        }
+        with pytest.raises(
+            ValueError, match="Invalid post_create_game payload: invalid amount of keys"
+        ):
+            post_create_game(payload)
+
+    def test_post_create_game_no_uuid_key(self):
+        payload = {"wrong-key": "dummy-val"}
+        with pytest.raises(
+            ValueError,
+            match="Invalid post_create_game payload:  must contain 'uuid' key",
+        ):
+            post_create_game(payload)

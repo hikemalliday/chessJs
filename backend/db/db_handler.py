@@ -139,13 +139,12 @@ class DbHandler:
             raise Exception(f"db_handler.post_login: Unexpected error: {e}") from e
 
     def post_create_game(self, payload, **kwargs):
-        # Should this exist in a payload instead? I think so...
-        # UUID arg here represents the user creating the game
         try:
             validators.post_create_game(payload)
             game_uuid = str(uuid4())
+            user_id = self.cursor.execute(self.queries["get_user_id_from_uuid"], (payload["uuid"],)).fetchone()
             self.cursor.execute(
-                self.queries["post_create_game"], (payload["uuid"], game_uuid)
+                self.queries["post_create_game"], (user_id[0], game_uuid)
             )
             self.conn.commit()
             game_id = self.cursor.lastrowid

@@ -1,6 +1,7 @@
 queries = {
     # Refactor the names of these
     # Can probably remove this, we are switching to uuid system
+    "get_user_from_uuid": """SELECT * FROM users WHERE uuid = ?""",
     "get_user_id_from_uuid": """SELECT (id) FROM users WHERE uuid = ?""",
     # I dont understand this query, white and black are not fields
     # "get_game_state": """SELECT activePlayer, gameState, game FROM game_state WHERE white = ? OR black = ? ORDER BY id DESC LIMIT 1""",

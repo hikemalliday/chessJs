@@ -1,38 +1,5 @@
-from uuid import uuid4
-import pytest
-import sqlite3
-from backend.db.db_handler import DbHandler
 import json
 from db.queries import queries
-
-# Dont think these are needed anymore
-@pytest.fixture
-def mock_validators(mocker):
-    mocker.patch("backend.db.validators.post_refresh", lambda payload: None)
-    mocker.patch("backend.db.validators.post_login", lambda payload: None)
-    mocker.patch("backend.db.validators.post_game_state", lambda payload: None)
-
-@pytest.fixture
-def db_handler(tmp_path):
-    db = DbHandler()
-    db.conn = sqlite3.connect(":memory:", check_same_thread=False)
-    db.cursor = db.conn.cursor()
-    db.create_tables()
-    yield db
-    db.conn.close()
-
-@pytest.fixture
-def user(db_handler):
-    user_uuid = str(uuid4())
-    db = db_handler
-    db.cursor.execute(queries["post_signup"], ("test-user", "test-pass", user_uuid))
-    db.conn.commit()
-    user = db.cursor.execute(queries["get_user_from_uuid"], (user_uuid,)).fetchone()
-    yield {"id": user[0], "username": user[1], "passowrd": user[2], "uuid": user[3]}
-
-@pytest.fixture
-def valid_game_state():
-    yield [[None for _ in range(8)] for _ in range(8)]
 
 
 class TestDbHandler:

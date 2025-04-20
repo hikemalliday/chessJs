@@ -8,6 +8,7 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 from rest.request_handlers import (
     get_game_state,
     get_games,
+    get_is_game_valid,
     post_game_state,
     post_start_game,
     post_login,
@@ -36,6 +37,7 @@ class APIHandler(BaseHTTPRequestHandler):
     GET_REQUESTS = {
         "/game_state": get_game_state,
         "/games": get_games,
+        "/game_is_valid": get_is_game_valid,
     }
     POST_REQUESTS = {
         "/signup": post_signup,

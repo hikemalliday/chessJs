@@ -8,6 +8,7 @@ from backend.db.validators import (
 )
 from contextlib import contextmanager
 
+#TODO: Create test functions or classes to remove this duplicated code
 
 @contextmanager
 def does_not_raise():
@@ -15,17 +16,8 @@ def does_not_raise():
 
 
 class TestValidators:
-
-    VALID_GAME_STATE = [
-        [None, None, None, None, None, None, None, None],
-        [None, None, None, None, None, None, None, None],
-        [None, None, None, None, None, None, None, None],
-        [None, None, None, None, None, None, None, None],
-        [None, None, None, None, None, None, None, None],
-        [None, None, None, None, None, None, None, None],
-        [None, None, None, None, None, None, None, None],
-        [None, None, None, None, None, None, None, None],
-    ]
+    
+    VALID_GAME_STATE = [[None for _ in range(8)] for _ in range(8)]
     INVALID_GAME_STATE_TOP_LEVEL = []
     INVALID_GAME_STATE_CHILD_LEVEL = [[], [], [], [], [], [], [], []]
 
@@ -131,12 +123,11 @@ class TestValidators:
         ):
             post_signup(payload)
 
-    # validators.post_game_state
     def test_post_game_state_valid_payload(self):
         payload = {
             "activePlayer": "white",
             "gameState": self.VALID_GAME_STATE,
-            "game": 1,
+            "uuid": "test-uuid",
         }
         with does_not_raise():
             post_game_state(payload)
@@ -166,7 +157,7 @@ class TestValidators:
         ):
             post_game_state(payload)
 
-    def test_post_game_state_no_game_key(self):
+    def test_post_game_state_no_uuid_key(self):
         payload = {
             "invalid-key": None,
             "activePlayer": "white",
@@ -174,7 +165,7 @@ class TestValidators:
         }
         with pytest.raises(
             ValueError,
-            match="Invalid post_game_state payload: must contain 'game' key",
+            match="Invalid post_game_state payload: must contain 'uuid' key",
         ):
             post_game_state(payload)
 
@@ -182,7 +173,7 @@ class TestValidators:
         payload = {
             "activePlayer": "white",
             "gameState": self.INVALID_GAME_STATE_TOP_LEVEL,
-            "game": 1,
+            "uuid": "test-uuid",
         }
         with pytest.raises(
             ValueError,
@@ -194,7 +185,7 @@ class TestValidators:
         payload = {
             "activePlayer": "white",
             "gameState": self.INVALID_GAME_STATE_CHILD_LEVEL,
-            "game": 1,
+            "uuid": "test-uuid",
         }
         with pytest.raises(
             ValueError,
@@ -223,6 +214,6 @@ class TestValidators:
         payload = {"wrong-key": "dummy-val"}
         with pytest.raises(
             ValueError,
-            match="Invalid post_create_game payload:  must contain 'uuid' key",
+            match="Invalid post_create_game payload: must contain 'uuid' key",
         ):
             post_create_game(payload)

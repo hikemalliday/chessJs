@@ -13,6 +13,10 @@ def get_games(db_handler, query_params, **kwargs):
     return db_handler.get_games(query_params)
 
 
+def get_is_game_full(db_handler, query_params, **kwargs):
+    return db_handler.get_is_game_full(query_params)
+
+
 # POST Requests
 def post_game_state(db_handler, payload, **kwargs):
     return db_handler.post_game_state(payload, uuid=kwargs.pop("uuid", None), **kwargs)

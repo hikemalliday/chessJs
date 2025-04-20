@@ -6,7 +6,7 @@ import json
 import bcrypt
 from db import validators
 from db.mock_data import starting_game_state
-from helper import create_jwt, hash_password
+from helper import hash_password
 from .queries import queries
 from .tables import tables
 from . import serializers
@@ -75,6 +75,18 @@ class DbHandler:
             raise ValueError(f"db_handler.get_games: {e}") from e
         except Exception as e:
             raise Exception(f"db_handler.get_games: Unexpected error: {e}") from e
+        
+    def get_is_game_full(self, query_params):
+        try:
+            game_id = query_params["id"]
+            white, black = self.cursor.execute(self.queries["is_game_full"], (game_id,)).fetchone()
+            if white and black:
+                return {"game_is_full": True}
+            return {"game_is_full": False}
+        except ValueError as e:
+            raise ValueError(f"db_handler.get_is_game_full: {e}") from e
+        except Exception as e:
+            raise Exception(f"db_handler.get_is_game_full: Unexpected error: {e}") from e
 
     def post_game_state(self, payload, **kwargs):
         try:
